@@ -1,0 +1,26 @@
+{
+  "name": "tomasz-wilczynski-demo",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.12.1",
+    "@google-cloud/vision": "^4.3.2",
+    "camelcase": "^8.0.0",
+    "dotenv": "^16.4.5",
+    "googleapis": "^143.0.0",
+    "node-poppler": "^7.2.2",
+    "openai": "^4.58.2",
+    "pnpm": "^9.11.0",
+    "sharp": "^0.33.5",
+    "winston": "^3.14.2",
+    "zod": "^3.23.8"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
