@@ -12,6 +12,7 @@
     "@google-cloud/vision": "^4.3.2",
     "camelcase": "^8.0.0",
     "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
     "googleapis": "^143.0.0",
     "node-poppler": "^7.2.2",
     "openai": "^4.58.2",
