@@ -1,7 +1,7 @@
 import fs from "fs";
 import { google } from "googleapis";
 import path from "path";
-import { auth } from "../drive/google-api.js";
+import { auth } from "../../drive/google-api.js";
 
 
 export async function downloadFile(fileId, saveFolder, fileName) {

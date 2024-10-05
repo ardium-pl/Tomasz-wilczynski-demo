@@ -2,9 +2,9 @@ import vision from "@google-cloud/vision";
 import dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
-import { convertPdfToImages } from "../../utils/convertPdfToImage.js";
-import { deleteFile } from "../../utils/deleteFile.js";
-import { logger } from "../../utils/logger.js";
+import { convertPdfToImages } from "../../src/utils/convertPdfToImage.js";
+import { deleteFile } from "../../src/utils/deleteFile.js";
+import { logger } from "../../src/utils/logger.js";
 
 dotenv.config();
 
@@ -28,6 +28,7 @@ export async function pdfOCR(pdfFilePath) {
 
   try {
     const imageFilePaths = await convertPdfToImages(pdfFilePath, imagesFolder);
+    deleteFile(pdfFilePath);
     logger.info(`🖼️ Converted PDF to images: ${imageFilePaths.join(", ")}`);
 
     if (imageFilePaths.length === 0) {
@@ -35,15 +36,19 @@ export async function pdfOCR(pdfFilePath) {
       return [];
     }
 
-    let concatenatedResults = "";
-    for (const imageFilePath of imageFilePaths) {
-      const ocrResult = await fileOcr(imageFilePath, outputTextFolder);
-      if (ocrResult) {
-        concatenatedResults += ocrResult.googleVisionText + "\n";
-      } else {
-        logger.warn(`No text found in image: ${imageFilePath}`);
-      }
-    }
+    const ocrResults = await Promise.all(
+        imageFilePaths.map(async (imageFilePath) => {
+          const ocrResult = await fileOcr(imageFilePath, outputTextFolder);
+          if (ocrResult) {
+            return ocrResult.googleVisionText;
+          } else {
+            logger.warn(`No text found in image: ${imageFilePath}`);
+            return "";
+          }
+        })
+      );
+      
+      const concatenatedResults = ocrResults.join("\n");
 
     await _saveDataToTxt(
       outputTextFolder,
@@ -91,7 +96,7 @@ export async function fileOcr(imageFilePath) {
     }
 
     logger.info(` 💚 Successfully processed image ${imageFilePath}`);
-    const googleVisionText = result.fullTextAnnotation.text + "\n";
+    const googleVisionText = result.fullTextAnnotation.text;
     return { googleVisionText };
   } catch (err) {
     logger.error(`Error during Google Vision OCR processing: ${err.message}`);
