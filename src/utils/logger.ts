@@ -61,7 +61,6 @@ export const logger = winston.createLogger({
     ]
 });
 
-// Error handling for file writing
 logger.on('error', (error) => {
     console.error('Error in logger:', error);
 });
