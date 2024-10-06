@@ -1,32 +1,37 @@
 import { Poppler } from "node-poppler";
 import path from "path";
-import fs from "fs";
-import { replacePolishCharacters } from "./replacePolishCharacters.js";
-import {logger} from "./logger.js";
+import fs from "fs-extra";
+import { replacePolishCharacters } from "./replacePolishCharacters.ts";
+import {logger} from "./logger.ts";
 import camelcase from "camelcase";
 
-export async function convertPdfToImages(pdfFilePath, saveFolder) {
+export async function convertPdfToImages(pdfFilePath: string, saveFolder: string) {
     logger.info(`Starting conversion of PDF: ${pdfFilePath}`);
     const poppler = new Poppler();
     const outputPrefix = replacePolishCharacters(
         path.basename(pdfFilePath, path.extname(pdfFilePath))
     );
     const outputFilePath = path.join(saveFolder, `${outputPrefix}`);
-    const pdfInfo = {};
+    const pdfInfo: Record<string, string> = {};
 
-    if (!fs.existsSync(saveFolder)) {
-        fs.mkdirSync(saveFolder, { recursive: true });
-    }
+    await fs.ensureDir(saveFolder);
 
     try {
         logger.info(`Getting PDF info for: ${pdfFilePath}`);
         const ret = await poppler.pdfInfo(pdfFilePath);
-
-        ret.split('\n').map(r => r.split(': ')).forEach(r => {
-            if (r.length > 1) {
-                pdfInfo[camelcase(r[0])] = r[1].trim();
-            }
-        });
+        
+        if (typeof ret === 'string') {
+            ret.split('\n')
+                .map(r => r.split(': '))
+                .forEach(r => {
+                    if (r.length > 1) {
+                        pdfInfo[camelcase(r[0])] = r[1].trim();
+                    }
+                });
+        } else {
+            logger.error(`Expected string output from pdfInfo but got: ${typeof ret}`);
+            throw new Error('Invalid PDF info format');
+        }
 
         logger.info(`PDF info: ${JSON.stringify(pdfInfo)}`);
 

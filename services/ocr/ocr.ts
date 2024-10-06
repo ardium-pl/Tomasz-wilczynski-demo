@@ -11,7 +11,7 @@ dotenv.config();
 const VISION_AUTH = {
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"), // Handling the private key newline issue
+    private_key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(/\\n/g, "\n"), // Handling the private key newline issue
   },
   fallback: true, // Force use of REST API instead of gRPC
 };
@@ -38,7 +38,7 @@ export async function pdfOCR(pdfFilePath) {
 
     const ocrResults = await Promise.all(
         imageFilePaths.map(async (imageFilePath) => {
-          const ocrResult = await fileOcr(imageFilePath, outputTextFolder);
+          const ocrResult = await fileOcr(imageFilePath);
           if (ocrResult) {
             return ocrResult.googleVisionText;
           } else {
@@ -84,7 +84,7 @@ async function _saveDataToTxt(folder, fileNameWithoutExt, text) {
   }
 }
 
-export async function fileOcr(imageFilePath) {
+export async function fileOcr(imageFilePath: string) {
   const client = new vision.ImageAnnotatorClient(VISION_AUTH);
 
   logger.info(` 🕶️ Processing image with Google Vision: ${imageFilePath}`);

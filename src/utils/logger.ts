@@ -5,15 +5,14 @@ const DEFAULT_LOG_LEVEL = 'debug'; // Zmienione na 'debug' dla bardziej szczegó
 const TIME_ZONE = 'Europe/Warsaw';
 const DATE_FORMAT = 'en-GB';
 
-const formatDateInTimeZone = (date, timeZone) => {
-    const options = {
+const formatDateInTimeZone = (date: Date, timeZone: string) => {
+    const options: Intl.DateTimeFormatOptions = {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        fractionalSecondDigits: 3, // Dodajemy milisekundy dla bardziej precyzyjnego timestampa
         timeZone: timeZone,
         hour12: false
     };
@@ -29,9 +28,9 @@ const logFormat = winston.format.combine(
     winston.format.json()
 );
 
-const getLogFilePath = (filename) => path.join(process.cwd(), 'logs', filename);
+const getLogFilePath = (filename: string) => path.join(process.cwd(), 'logs', filename);
 
-const fileTransport = (filename, level = 'debug') => new winston.transports.File({
+const fileTransport = (filename: string, level = 'debug') => new winston.transports.File({
     filename: getLogFilePath(filename),
     level,
     format: logFormat

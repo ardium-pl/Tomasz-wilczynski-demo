@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import OpenAI from "openai";
-import { InvoiceData } from "./invoiceJsonSchema.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { InvoiceData } from "./invoiceJsonSchema.ts";
+import { zodResponseFormat } from "openai/helpers/zod";
 
 dotenv.config();
 
@@ -9,23 +9,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function parseOcrText(ocrText) {
-  // Convert Zod schema to JSON Schema
-  const jsonSchema = zodToJsonSchema(InvoiceData, {
-    topRef: false, // Prevent top-level $ref
-    definitions: false, // Do not include definitions
-  });
-
-
-  // Manually construct response_format
-  const responseFormat = {
-    type: "json_schema",
-    json_schema: {
-      name: "offerSummary", // Required by OpenAI
-      schema: jsonSchema, // The fully expanded JSON schema
-    },
-  };
-
+export async function parseOcrText(ocrText: string) {
   const completion = await client.beta.chat.completions.parse({
     model: "gpt-4o-2024-08-06",
     messages: [
@@ -37,7 +21,7 @@ export async function parseOcrText(ocrText) {
       },
       { role: "user", content: ocrText },
     ],
-    response_format: responseFormat,
+    response_format: zodResponseFormat(InvoiceData, "invoiceData"),
   });
 
   const message = completion.choices[0]?.message;
