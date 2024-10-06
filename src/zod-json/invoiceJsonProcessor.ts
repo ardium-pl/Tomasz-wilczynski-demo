@@ -9,7 +9,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function parseOcrText(ocrText: string) {
+export async function parseOcrText(ocrText: string): Promise<InvoiceData> {
   const completion = await client.beta.chat.completions.parse({
     model: "gpt-4o-2024-08-06",
     messages: [
