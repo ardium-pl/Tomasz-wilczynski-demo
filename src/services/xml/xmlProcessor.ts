@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { xmlFilesFolder } from "../../utils/constants";
 
-export class XmlWrapper {
+export class XmlService {
   public processDataToXml(data: InvoiceDataType): Paczka {
     const month = data.documentDate.slice(0, 7);
 
@@ -54,7 +54,7 @@ export class XmlWrapper {
     return xml;
   }
 
-  public saveXmlToFile(xml: string, fileName: string): void {
+  public saveXmlToFile(xml: string, fileName: string): string {
     const ext = path.extname(fileName);
     const baseName = path.basename(fileName, ext);
   
@@ -67,7 +67,10 @@ export class XmlWrapper {
       fs.mkdirSync(xmlFilesFolder, { recursive: true });
     }
   
-    fs.writeFileSync(filePath, xml, 'utf8');
+    fs.writeFileSync(filePath, xml, "utf8");
+
+    // Return the file path so it can be used elsewhere
+    return filePath;
   }
   
 }

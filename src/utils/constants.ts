@@ -9,6 +9,9 @@ export const auth = new google.auth.JWT({
   project_id: process.env.GOOGLE_PROJECT_ID as string,
 });
 
+export const PDF_FOLDER_ID = process.env.PDF_FOLDER_ID as string;
+export const XML_FOLDER_ID = process.env.XML_FOLDER_ID as string;
+
 export const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
