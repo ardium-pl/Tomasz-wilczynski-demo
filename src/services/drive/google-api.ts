@@ -1,14 +1,5 @@
 import { google, drive_v3 } from "googleapis";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-export const auth = new google.auth.JWT({
-  email: process.env.GOOGLE_CLIENT_EMAIL as string,
-  key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(/\\n/g, "\n"),
-  scopes: ["https://www.googleapis.com/auth/drive"],
-  project_id: process.env.GOOGLE_PROJECT_ID as string,
-});
+import { auth } from "../../utils/constants";
 
 export async function listAllFiles(folderId: string): Promise<drive_v3.Schema$File[]> {
   const drive = google.drive({ version: "v3", auth: auth });
@@ -52,3 +43,4 @@ export async function listAllFiles(folderId: string): Promise<drive_v3.Schema$Fi
 
   return await listFilesInFolder(folderId);
 }
+

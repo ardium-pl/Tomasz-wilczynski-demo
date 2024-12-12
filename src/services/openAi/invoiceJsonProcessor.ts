@@ -1,17 +1,10 @@
-import dotenv from "dotenv";
-import OpenAI from "openai";
-import { InvoiceData } from "./invoiceJsonSchema.ts";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { client } from "../../utils/constants.ts";
+import { InvoiceData, InvoiceDataType } from "./invoiceJsonSchema.ts";
 
-dotenv.config();
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-export async function parseOcrText(ocrText: string): Promise<InvoiceData> {
+export async function parseOcrText(ocrText: string): Promise<InvoiceDataType> {
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-4o-2024-08-06",
+    model: 'gpt-4o-2024-11-20',
     messages: [
       {
         role: "system",

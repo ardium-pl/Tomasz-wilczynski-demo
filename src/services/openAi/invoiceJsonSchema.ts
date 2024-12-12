@@ -23,7 +23,7 @@ export const InvoiceData = z.object({
     products: z.array(Product)
 });
 
-export type InvoiceData = z.infer<typeof InvoiceData>;
+export type InvoiceDataType = z.infer<typeof InvoiceData>;
 type Product = z.infer<typeof Product>;
 
 

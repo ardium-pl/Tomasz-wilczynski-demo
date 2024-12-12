@@ -1,32 +1,12 @@
 import vision from "@google-cloud/vision";
-import dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
-import { convertPdfToImages } from "../../src/utils/convertPdfToImage";
-import { deleteFile } from "../../src/utils/deleteFile";
-import { logger } from "../../src/utils/logger";
-
-dotenv.config();
-
-type OcrResult = {
-  googleVisionText: string;
-};
-
-const VISION_AUTH = {
-  credentials: {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL as string,
-    private_key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(
-      /\\n/g,
-      "\n"
-    ), // Handling the private key newline issue
-  },
-  fallback: true, // Force use of REST API instead of gRPC
-};
+import { convertPdfToImages } from "../../utils/convertPdfToImage";
+import { deleteFile } from "../../utils/deleteFile";
+import { logger } from "../../utils/logger";
+import { imagesFolder, inputPdfFolder, outputTextFolder, VISION_AUTH } from "../../utils/constants";
 
 export async function pdfOCR(pdfFilePath: string): Promise<string> {
-  const inputPdfFolder = "./input-pdf";
-  const imagesFolder = "./images";
-  const outputTextFolder = "./output-text";
   const fileNameWithoutExt = path.basename(pdfFilePath, ".pdf");
 
   await Promise.all(
@@ -51,7 +31,7 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
       imageFilePaths.map(async (imageFilePath): Promise<string> => {
         const ocrResult = await fileOcr(imageFilePath);
         if (ocrResult) {
-          return ocrResult.googleVisionText;
+          return ocrResult;
         } else {
           logger.warn(`No text found in image: ${imageFilePath}`);
           return "";
@@ -99,9 +79,7 @@ async function _saveDataToTxt(
   }
 }
 
-export async function fileOcr(
-  imageFilePath: string
-): Promise<OcrResult | null> {
+export async function fileOcr(imageFilePath: string): Promise<string | null> {
   const client = new vision.ImageAnnotatorClient(VISION_AUTH);
 
   logger.info(` 🕶️ Processing image with Google Vision: ${imageFilePath}`);
@@ -116,10 +94,9 @@ export async function fileOcr(
     }
 
     logger.info(` 💚 Successfully processed image ${imageFilePath}`);
-    return { googleVisionText };
+    return googleVisionText;
   } catch (err: any) {
     logger.error(`Error during Google Vision OCR processing: ${err.message}`);
-    // Instead of throwing an error, we'll just log it and continue
     return null;
   }
 }

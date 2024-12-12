@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import { google } from "googleapis";
 import path from "path";
-import { auth } from "../../drive/google-api.ts";
+import { auth } from "./constants";
 
 export async function downloadFile(fileId: string, saveFolder: string, fileName: string) {
   const drive = google.drive({ version: "v3", auth: auth });

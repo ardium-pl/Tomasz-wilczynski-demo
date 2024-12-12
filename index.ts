@@ -1,14 +1,17 @@
+import "dotenv/config";
 import { drive_v3 } from "googleapis";
-import { listAllFiles } from "./drive/google-api.ts";
-import { pdfOCR } from "./services/ocr/ocr.js";
+import { listAllFiles } from "./src/services/drive/google-api.ts";
+import { pdfOCR } from "./src/services/ocr/ocr.ts";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
-import { parseOcrText } from "./src/zod-json/invoiceJsonProcessor.ts";
+import { parseOcrText } from "./src/services/openAi/invoiceJsonProcessor.ts";
+import { XmlWrapper } from "./src/services/xml/xmlProcessor.ts"
+import { inputPdfFolder } from "./src/utils/constants.ts";
 
-const FOLDER_ID = process.env.FOLDER_ID as string;
+const PDF_FOLDER_ID = process.env.PDF_FOLDER_ID as string;
 
 async function processFile(file: drive_v3.Schema$File) {
-  const inputPdfFolder = "./input-pdf";
+  const xml = new XmlWrapper();
   try {
     logger.info(` 🧾 Downloading PDF: ${file.name}`);
     const pdfFilePath = await downloadFile(file.id as string, inputPdfFolder, file.name as string);
@@ -17,15 +20,22 @@ async function processFile(file: drive_v3.Schema$File) {
     const ocrDataText = await pdfOCR(pdfFilePath);
     logger.info(`📄 OCR Data Text: ${ocrDataText}`);
 
-    const parsedData = await parseOcrText(ocrDataText as string);
+    const parsedData = await parseOcrText(ocrDataText);
     logger.info("JSON Schema: ", parsedData);
+
+    const processedXmlData = xml.processDataToXml(parsedData);
+    logger.info(`XML object ${JSON.stringify(processedXmlData, null, 2)}`);
+    const xmlString = xml.convertPaczkaToXml(processedXmlData);
+    logger.info(`XML string ${xmlString}`);
+    xml.saveXmlToFile(xmlString, file.name as string );
+
   } catch (err) {
     logger.error(`Error processing file ${file.name}: ${err.message}`);
   }
 }
 
 async function main() {
-  const files = await listAllFiles(FOLDER_ID);
+  const files = await listAllFiles(PDF_FOLDER_ID);
 
   if (files.length === 0) {
     logger.info("No files found to process.");
