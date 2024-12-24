@@ -9,8 +9,11 @@ export async function parseOcrText(ocrText: string): Promise<InvoiceDataType> {
       {
         role: "system",
         content:
-          "You are an expert in parsing invoice data from OCR text. Extract the relevant information and " +
-          "structure it according to the provided schema. Remember to parse values with 2 places after decimal, so e.g. 156.60 etc.",
+          `You are an expert in parsing invoice data from OCR text. Extract the relevant information and 
+          structure it according to the provided schema. Please obey those rules:
+          
+            1.Remember to parse values with 2 places after decimal, so e.g. 156.60 etc.
+            2.Assign all dates in the format YYYY-MM-DD`,
       },
       { role: "user", content: ocrText },
     ],
