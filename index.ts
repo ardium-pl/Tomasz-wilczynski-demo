@@ -23,8 +23,11 @@ app.use(express.json());
 app.use(cors());
 
 let savedPageToken: string | null = null;
+let debounceTimer: NodeJS.Timeout | null = null;
+const DEBOUNCE_MS = 10000; // 10 seconds
 
-app.post("/drive/webhook", async (req, res) => {
+// Webhook endpoint
+app.post("/drive/webhook", (req, res) => {
   const channelId = req.header("X-Goog-Channel-Id");
   const resourceState = req.header("X-Goog-Resource-State");
   const resourceId = req.header("X-Goog-Resource-Id");
@@ -34,19 +37,30 @@ app.post("/drive/webhook", async (req, res) => {
     channelId,
     resourceState,
     resourceId,
-    messageNumber,
+    messageNumber
   });
 
-  // Acknowledge the webhook quickly
+  // Always respond quickly
   res.sendStatus(200);
 
-  // When "change" occurs, we fetch changes from the Drive changes feed
-  if (resourceState === 'change') {
-    try {
-      await handleDriveChangeNotification();
-    } catch (err) {
-      console.error("Error handling Drive change:", err);
+  if (resourceState === "change") {
+    console.log(`[debounce] Scheduling handleDriveChangeNotification in ${DEBOUNCE_MS / 1000}s`);
+
+    // Clear any previously scheduled run
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
     }
+
+    // Schedule a new run after DEBOUNCE_MS
+    debounceTimer = setTimeout(async () => {
+      debounceTimer = null;
+      try {
+        console.log("[debounce] Triggering handleDriveChangeNotification now...");
+        await handleDriveChangeNotification();
+      } catch (err) {
+        console.error("Error during handleDriveChangeNotification:", err);
+      }
+    }, DEBOUNCE_MS);
   }
 });
 
