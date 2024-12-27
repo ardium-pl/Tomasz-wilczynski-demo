@@ -43,7 +43,7 @@ app.post("/drive/webhook", async (req, res) => {
   // When "change" occurs, we fetch changes from the Drive changes feed
   if (resourceState === 'change') {
     try {
-      await main();
+      await handleDriveChangeNotification();
     } catch (err) {
       console.error("Error handling Drive change:", err);
     }
@@ -85,40 +85,59 @@ async function processSingleFile(
 }
 
 
-// async function handleDriveChangeNotification() {
-//   const drive = googleDrive.drive;
+async function handleDriveChangeNotification() {
+  console.log("[handleDriveChangeNotification] Entered function.");
 
-//   // Assume we have savedPageToken stored somewhere
-//   // If we've never stored a page token, grab a fresh one
-//   if (!savedPageToken) {
-//     const { data } = await drive.changes.getStartPageToken();
-//     if (!data.startPageToken) {
-//       console.error("No startPageToken found; cannot process changes.");
-//       return;
-//     }
-//     savedPageToken = data.startPageToken;
-//   }
+  const drive = googleDrive.drive;
+  console.log("[handleDriveChangeNotification] Drive client initialized.");
 
-//   const res = await drive.changes.list({ 
-//     pageToken: savedPageToken,
-//     fields: "*"
-//   });
+  // Check if we already have a saved page token
+  console.log("[handleDriveChangeNotification] Checking savedPageToken:", savedPageToken);
+  if (!savedPageToken) {
+    console.log("[handleDriveChangeNotification] No savedPageToken found. Fetching fresh token...");
+    const { data } = await drive.changes.getStartPageToken();
+    if (!data.startPageToken) {
+      console.error("[handleDriveChangeNotification] No startPageToken found; cannot process changes.");
+      return;
+    }
+    savedPageToken = data.startPageToken;
+    console.log("[handleDriveChangeNotification] Fetched new startPageToken:", savedPageToken);
+  }
 
-//   if (res.data.changes) {
-//     for (const change of res.data.changes) {
-//       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
-//         // This means a new file was uploaded or changed in the PDF folder
-//         console.log("New file detected:", change.file.name);
-//         const file = change.file; // drive_v3.Schema$File
-//         await main();
-//       }
-//     }
-//   }
+  console.log("[handleDriveChangeNotification] Listing changes with pageToken:", savedPageToken);
+  const res = await drive.changes.list({ 
+    pageToken: savedPageToken,
+    fields: "*"
+  });
 
-//   if (res.data.newStartPageToken) {
-//     savedPageToken = res.data.newStartPageToken;
-//   }
-// }
+  console.log("[handleDriveChangeNotification] changes.list response:", JSON.stringify(res.data, null, 2));
+
+  if (res.data.changes) {
+    console.log(`[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`);
+    for (const change of res.data.changes) {
+      console.log(`[handleDriveChangeNotification] Processing change:`, JSON.stringify(change, null, 2));
+      if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
+        console.log("[handleDriveChangeNotification] New file detected in PDF folder:", change.file.name);
+        const file = change.file; // drive_v3.Schema$File
+        
+        // Here you can process the file directly, or run your 'main' logic:
+        console.log("[handleDriveChangeNotification] Calling main() to re-process the PDF folder.");
+        await main();
+      } else {
+        console.log("[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping.");
+      }
+    }
+  } else {
+    console.log("[handleDriveChangeNotification] No changes returned from the Drive changes list.");
+  }
+
+  if (res.data.newStartPageToken) {
+    console.log("[handleDriveChangeNotification] Updating savedPageToken to:", res.data.newStartPageToken);
+    savedPageToken = res.data.newStartPageToken;
+  }
+
+  console.log("[handleDriveChangeNotification] Completed processing changes.\n");
+}
 
 async function main(): Promise<void> {
   logger.info("🚀 Starting file processing...");
