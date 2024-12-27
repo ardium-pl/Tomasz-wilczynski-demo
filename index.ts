@@ -1,4 +1,7 @@
 import "dotenv/config";
+import ansis from 'ansis';
+import cors from 'cors';
+import express from 'express';
 import { drive_v3 } from "googleapis";
 import { GoogleDriveService } from "./src/services/drive/google-api.ts";
 import { pdfOCR } from "./src/services/ocr/ocr.ts";
@@ -12,6 +15,36 @@ import {
 } from "./src/utils/constants.ts";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+// Middleware
+app.use(express.json());
+app.use(cors());
+
+app.post("/drive/webhook", (req, res) => {
+  const channelId = req.header("X-Goog-Channel-Id");
+  const resourceState = req.header("X-Goog-Resource-State");
+  const resourceId = req.header("X-Goog-Resource-Id");
+  const messageNumber = req.header("X-Goog-Message-Number");
+
+  console.log("Received Drive webhook notification:", {
+    channelId,
+    resourceState,
+    resourceId,
+    messageNumber
+  });
+
+  // Always respond quickly to avoid timeouts
+  res.sendStatus(200);
+
+  // resourceState can be "change", "sync", etc.
+  // If it's a 'change', we can fetch the latest changes from the changes feed
+  if (resourceState === "change") {
+    handleDriveChangeNotification()
+      .catch((err) => console.error("Error handling Drive change:", err));
+  }
+});
 
 const googleDrive = new GoogleDriveService();
 
@@ -44,6 +77,34 @@ async function processSingleFile(
     logger.error(
       `❌ Error processing file ${file.name}: ${err?.message || err}`
     );
+  }
+}
+
+
+async function handleDriveChangeNotification() {
+  const drive = googleDrive.drive;
+
+  // Assume we have savedPageToken stored somewhere
+  let savedPageToken = "SAVED_PAGE_TOKEN";
+
+  const res = await drive.changes.list({ 
+    pageToken: savedPageToken,
+    fields: "*"
+  });
+
+  if (res.data.changes) {
+    for (const change of res.data.changes) {
+      if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
+        // This means a new file was uploaded or changed in the PDF folder
+        console.log("New file detected:", change.file.name);
+        const file = change.file; // drive_v3.Schema$File
+        await main();
+      }
+    }
+  }
+
+  if (res.data.newStartPageToken) {
+    savedPageToken = res.data.newStartPageToken;
   }
 }
 
@@ -88,5 +149,8 @@ async function main(): Promise<void> {
     );
   }
 }
-
-await main();
+// Startup
+console.log(`Starting server...`);
+app.listen(PORT, () => {
+  console.log(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
+});

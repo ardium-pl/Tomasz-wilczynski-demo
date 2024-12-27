@@ -2,9 +2,11 @@ import { google, drive_v3 } from "googleapis";
 import { auth } from "../../utils/constants";
 import fs from "fs";
 import mime from "mime";
+import { v4 as uuidv4 } from "uuid";
 
 export class GoogleDriveService {
-  private drive: drive_v3.Drive;
+  public readonly drive: drive_v3.Drive;
+  private readonly uniqueChannelId = uuidv4();
 
   constructor() {
     this.drive = google.drive({ version: "v3", auth });
@@ -12,8 +14,12 @@ export class GoogleDriveService {
   public async listAllFiles(folderId: string): Promise<drive_v3.Schema$File[]> {
     return this.listFilesInFolder(folderId);
   }
-  
-  public async uploadFile(folderId: string, fileName: string, filePath: string): Promise<drive_v3.Schema$File> {
+
+  public async uploadFile(
+    folderId: string,
+    fileName: string,
+    filePath: string
+  ): Promise<drive_v3.Schema$File> {
     const fileMetadata = {
       name: fileName,
       parents: [folderId],
@@ -39,7 +45,29 @@ export class GoogleDriveService {
     }
   }
 
-  private async listFilesInFolder(folderId: string): Promise<drive_v3.Schema$File[]> {
+  public async watchDriveChanges() {
+    const {
+      data: { startPageToken },
+    } = await this.drive.changes.getStartPageToken();
+
+    if (!startPageToken) return console.error("No start page token found");
+
+    const watchResponse = await this.drive.changes.watch({
+      requestBody: {
+        id: this.uniqueChannelId,
+        type: "web_hook",
+        address:
+          "https://tomasz-wilczynski-demo-production.up.railway.app/drive/webhook",
+      },
+      pageToken: startPageToken,
+    });
+
+    console.log("Watch response:", watchResponse.data);
+  }
+
+  private async listFilesInFolder(
+    folderId: string
+  ): Promise<drive_v3.Schema$File[]> {
     let allFiles: drive_v3.Schema$File[] = [];
     let pageToken: string | null = null;
 
@@ -55,14 +83,20 @@ export class GoogleDriveService {
         const files: drive_v3.Schema$File[] = res.data.files || [];
 
         // Separate folders and files
-        const folderFiles = files.filter((file) => file.mimeType !== "application/vnd.google-apps.folder");
-        const subfolders = files.filter((file) => file.mimeType === "application/vnd.google-apps.folder");
+        const folderFiles = files.filter(
+          (file) => file.mimeType !== "application/vnd.google-apps.folder"
+        );
+        const subfolders = files.filter(
+          (file) => file.mimeType === "application/vnd.google-apps.folder"
+        );
 
         allFiles = allFiles.concat(folderFiles);
 
         // Recursively get files from subfolders
         for (const subfolder of subfolders) {
-          const subfolderFiles = await this.listFilesInFolder(subfolder.id as string);
+          const subfolderFiles = await this.listFilesInFolder(
+            subfolder.id as string
+          );
           allFiles = allFiles.concat(subfolderFiles);
         }
 
