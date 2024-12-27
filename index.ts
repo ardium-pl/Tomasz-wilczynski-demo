@@ -22,7 +22,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-app.post("/drive/webhook", (req, res) => {
+let savedPageToken: string | null = null;
+
+app.post("/drive/webhook", async (req, res) => {
   const channelId = req.header("X-Goog-Channel-Id");
   const resourceState = req.header("X-Goog-Resource-State");
   const resourceId = req.header("X-Goog-Resource-Id");
@@ -32,17 +34,19 @@ app.post("/drive/webhook", (req, res) => {
     channelId,
     resourceState,
     resourceId,
-    messageNumber
+    messageNumber,
   });
 
-  // Always respond quickly to avoid timeouts
+  // Acknowledge the webhook quickly
   res.sendStatus(200);
 
-  // resourceState can be "change", "sync", etc.
-  // If it's a 'change', we can fetch the latest changes from the changes feed
+  // When "change" occurs, we fetch changes from the Drive changes feed
   if (resourceState === "change") {
-    handleDriveChangeNotification()
-      .catch((err) => console.error("Error handling Drive change:", err));
+    try {
+      await handleDriveChangeNotification();
+    } catch (err) {
+      console.error("Error handling Drive change:", err);
+    }
   }
 });
 
@@ -85,7 +89,15 @@ async function handleDriveChangeNotification() {
   const drive = googleDrive.drive;
 
   // Assume we have savedPageToken stored somewhere
-  let savedPageToken = "SAVED_PAGE_TOKEN";
+  // If we've never stored a page token, grab a fresh one
+  if (!savedPageToken) {
+    const { data } = await drive.changes.getStartPageToken();
+    if (!data.startPageToken) {
+      console.error("No startPageToken found; cannot process changes.");
+      return;
+    }
+    savedPageToken = data.startPageToken;
+  }
 
   const res = await drive.changes.list({ 
     pageToken: savedPageToken,
@@ -151,6 +163,7 @@ async function main(): Promise<void> {
 }
 // Startup
 console.log(`Starting server...`);
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
+  await googleDrive.watchDriveChanges();
 });
