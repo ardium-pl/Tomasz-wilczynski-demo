@@ -41,9 +41,9 @@ app.post("/drive/webhook", async (req, res) => {
   res.sendStatus(200);
 
   // When "change" occurs, we fetch changes from the Drive changes feed
-  if (resourceState === "change") {
+  if (resourceState === 'change') {
     try {
-      await handleDriveChangeNotification();
+      await main();
     } catch (err) {
       console.error("Error handling Drive change:", err);
     }
@@ -85,40 +85,40 @@ async function processSingleFile(
 }
 
 
-async function handleDriveChangeNotification() {
-  const drive = googleDrive.drive;
+// async function handleDriveChangeNotification() {
+//   const drive = googleDrive.drive;
 
-  // Assume we have savedPageToken stored somewhere
-  // If we've never stored a page token, grab a fresh one
-  if (!savedPageToken) {
-    const { data } = await drive.changes.getStartPageToken();
-    if (!data.startPageToken) {
-      console.error("No startPageToken found; cannot process changes.");
-      return;
-    }
-    savedPageToken = data.startPageToken;
-  }
+//   // Assume we have savedPageToken stored somewhere
+//   // If we've never stored a page token, grab a fresh one
+//   if (!savedPageToken) {
+//     const { data } = await drive.changes.getStartPageToken();
+//     if (!data.startPageToken) {
+//       console.error("No startPageToken found; cannot process changes.");
+//       return;
+//     }
+//     savedPageToken = data.startPageToken;
+//   }
 
-  const res = await drive.changes.list({ 
-    pageToken: savedPageToken,
-    fields: "*"
-  });
+//   const res = await drive.changes.list({ 
+//     pageToken: savedPageToken,
+//     fields: "*"
+//   });
 
-  if (res.data.changes) {
-    for (const change of res.data.changes) {
-      if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
-        // This means a new file was uploaded or changed in the PDF folder
-        console.log("New file detected:", change.file.name);
-        const file = change.file; // drive_v3.Schema$File
-        await main();
-      }
-    }
-  }
+//   if (res.data.changes) {
+//     for (const change of res.data.changes) {
+//       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
+//         // This means a new file was uploaded or changed in the PDF folder
+//         console.log("New file detected:", change.file.name);
+//         const file = change.file; // drive_v3.Schema$File
+//         await main();
+//       }
+//     }
+//   }
 
-  if (res.data.newStartPageToken) {
-    savedPageToken = res.data.newStartPageToken;
-  }
-}
+//   if (res.data.newStartPageToken) {
+//     savedPageToken = res.data.newStartPageToken;
+//   }
+// }
 
 async function main(): Promise<void> {
   logger.info("🚀 Starting file processing...");
