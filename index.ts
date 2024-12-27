@@ -116,9 +116,8 @@ async function handleDriveChangeNotification() {
     console.log(`[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`);
     for (const change of res.data.changes) {
       console.log(`[handleDriveChangeNotification] Processing change:`, JSON.stringify(change, null, 2));
-      if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
+      if (change.file) {
         console.log("[handleDriveChangeNotification] New file detected in PDF folder:", change.file.name);
-        const file = change.file; // drive_v3.Schema$File
         
         // Here you can process the file directly, or run your 'main' logic:
         console.log("[handleDriveChangeNotification] Calling main() to re-process the PDF folder.");
