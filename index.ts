@@ -124,12 +124,12 @@ async function handleDriveChangeNotification() {
     fields: "*"
   });
 
-  logger.info("[handleDriveChangeNotification] changes.list response:", JSON.stringify(res.data, null, 2));
+  logger.info("[handleDriveChangeNotification] changes.list response:", res.data);
 
   if (res.data.changes) {
     logger.info(`[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`);
     for (const change of res.data.changes) {
-      logger.info(`[handleDriveChangeNotification] Processing change:`, JSON.stringify(change, null, 2));
+      logger.info(`[handleDriveChangeNotification] Processing change:`, change);
       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
         logger.info("[handleDriveChangeNotification] New file detected in PDF folder:", change.file.name);
         
