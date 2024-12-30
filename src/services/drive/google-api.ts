@@ -1,11 +1,11 @@
-import { google, drive_v3 } from "googleapis";
-import { auth } from "../../utils/constants";
 import fs from "fs";
+import { drive_v3, google } from "googleapis";
 import mime from "mime";
-import { v4 as uuidv4 } from "uuid";
-import { MySqlService } from "../db/mySql";
-import { WatchDrive } from "../../utils/allTypes";
 import { RowDataPacket } from "mysql2";
+import { v4 as uuidv4 } from "uuid";
+import { WatchDrive } from "../../utils/allTypes";
+import { auth } from "../../utils/constants";
+import { MySqlService } from "../db/mySql";
 
 export class GoogleDriveService {
   public readonly drive: drive_v3.Drive;
@@ -162,17 +162,18 @@ export class GoogleDriveService {
 
   public async getWatchDriveData(): Promise<WatchDrive | null> {
     try {
-      // Example query: select the first record (if you store only one channel)
       const result = await this.sql.executeSQL<RowDataPacket[]>(`
-        SELECT 
-          channel_id, 
-          resource_id, 
-          saved_page_token, 
-          expiration, 
-          last_updated
-        FROM drive_watch
-        ORDER BY id
-        LIMIT 1
+SELECT 
+    channel_id, 
+    resource_id, 
+    saved_page_token, 
+    expiration, 
+    last_updated
+FROM 
+    drive_watch
+ORDER BY 
+    last_updated DESC 
+LIMIT 1;     
       `);
 
       if (!result || result.length === 0) {
