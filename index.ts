@@ -43,7 +43,8 @@ app.post("/drive/webhook", async (req, res) => {
 
   if (resourceState === "change") {
     try {
-      await handleDriveChangeNotification();
+      logger.info("🔔 Received Drive change notification. Processing...");
+      // await handleDriveChangeNotification();
     } catch (err) {
       console.error("Error handling Drive change:", err);
     }
