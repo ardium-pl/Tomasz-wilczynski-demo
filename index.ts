@@ -116,7 +116,7 @@ async function handleDriveChangeNotification() {
     logger.info(`[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`);
     for (const change of res.data.changes) {
       logger.info(`[handleDriveChangeNotification] Processing change:`, change);
-      logger.info(`Folder: `, change.file?.parents);
+      logger.info(`Folder: ${change.file?.parents}, File: ${change.file?.name}`);
       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
         logger.info("[handleDriveChangeNotification] New file detected in PDF folder:", change.file.name);
         
