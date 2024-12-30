@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import mysql from "mysql2/promise";
 import OpenAI from "openai";
 import path from "path";
 
@@ -13,22 +14,30 @@ export const PDF_FOLDER_ID = process.env.PDF_FOLDER_ID as string;
 export const XML_FOLDER_ID = process.env.XML_FOLDER_ID as string;
 
 export const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export const VISION_AUTH = {
-    credentials: {
-      client_email: process.env.GOOGLE_CLIENT_EMAIL as string,
-      private_key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(
-        /\\n/g,
-        "\n"
-      ), // Handling the private key newline issue
-    },
-    fallback: true, // Force use of REST API instead of gRPC
-  };
+  credentials: {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL as string,
+    private_key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(
+      /\\n/g,
+      "\n"
+    ), // Handling the private key newline issue
+  },
+  fallback: true, // Force use of REST API instead of gRPC
+};
 
-const dataFolder = "./data"; 
+const dataFolder = "./data";
 export const inputPdfFolder = path.join(dataFolder, "input-pdf");
-export const imagesFolder = path.join(dataFolder,"images");
-export const outputTextFolder = path.join(dataFolder,"output-text");
+export const imagesFolder = path.join(dataFolder, "images");
+export const outputTextFolder = path.join(dataFolder, "output-text");
 export const xmlFilesFolder = path.join(dataFolder, "xml-files");
+
+export const dbConfig: mysql.ConnectionOptions = {
+  host: process.env.MYSQL_HOST as string,
+  user: process.env.MYSQL_USER as string,
+  password: process.env.MYSQL_PASSWORD as string,
+  database: process.env.MYSQL_DATABASE as string,
+  port: parseInt(process.env.MYSQL_PORT as string, 10),
+};

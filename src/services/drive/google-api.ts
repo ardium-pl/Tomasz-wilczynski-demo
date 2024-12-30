@@ -3,17 +3,21 @@ import { auth } from "../../utils/constants";
 import fs from "fs";
 import mime from "mime";
 import { v4 as uuidv4 } from "uuid";
+import { MySqlService } from "../db/mySql";
+import { WatchDrive } from "../../utils/allTypes";
+import { RowDataPacket } from "mysql2";
 
 export class GoogleDriveService {
   public readonly drive: drive_v3.Drive;
-  
+  private sql = new MySqlService();
+
   constructor() {
     this.drive = google.drive({ version: "v3", auth });
   }
   public async listAllFiles(folderId: string): Promise<drive_v3.Schema$File[]> {
     return this.listFilesInFolder(folderId);
   }
-  
+
   public async uploadFile(
     folderId: string,
     fileName: string,
@@ -23,35 +27,63 @@ export class GoogleDriveService {
       name: fileName,
       parents: [folderId],
     };
-    
+
     const fileMimeType = mime.getType(filePath) || "application/octet-stream";
     const media = {
       mimeType: fileMimeType,
       body: fs.createReadStream(filePath),
     };
-    
+
     try {
       const response = await this.drive.files.create({
         requestBody: fileMetadata,
         media,
         fields: "id, name, mimeType, parents",
       });
-      
+
       return response.data;
     } catch (error) {
       console.error("Error uploading file:", error);
       throw error;
     }
   }
-  
+
   public async watchDriveChanges() {
-    const uniqueChannelId = uuidv4();
+    // 1) Try to get existing channel & token from DB
+    const existingRecord = await this.getChannelIdAndStartPageToken();
+
+    if (existingRecord) {
+      // OPTIONAL: If you store 'expiration' in the table, check if it's still valid
+      const now = Date.now();
+      const channelIsValid =
+        existingRecord.expiration && existingRecord.expiration > now;
+
+      if (channelIsValid) {
+        console.log(`[watchDriveChanges] Existing channel is still valid. 
+                     Channel ID: ${existingRecord.channelId}`);
+        // We can stop here because we already have a channel that hasn't expired.
+        return;
+      } else {
+        console.log(`[watchDriveChanges] Existing channel is expired or missing expiration. 
+                     Will create a new one.`);
+      }
+    } else {
+      console.log(
+        "[watchDriveChanges] No existing channel found. Creating a new one..."
+      );
+    }
+
+    // 2) Fetch startPageToken from Drive
     const {
       data: { startPageToken },
     } = await this.drive.changes.getStartPageToken();
+    if (!startPageToken) {
+      console.error("No start page token found. Cannot watch changes.");
+      return;
+    }
 
-    if (!startPageToken) return console.error("No start page token found");
-
+    // 3) Create a new watch channel
+    const uniqueChannelId = uuidv4();
     const watchResponse = await this.drive.changes.watch({
       requestBody: {
         id: uniqueChannelId,
@@ -61,6 +93,27 @@ export class GoogleDriveService {
       },
       pageToken: startPageToken,
     });
+
+    const { id: channelId, resourceId, expiration } = watchResponse.data;
+
+    // 4) Insert or update the DB record
+    const connection = await this.sql.createTcpConnection();
+
+    // If you only ever keep ONE record in drive_watch,
+    // you might do an UPSERT logic:
+    await connection?.query(
+      `
+      INSERT INTO drive_watch (channel_id, resource_id, saved_page_token, expiration, last_updated)
+      VALUES (?, ?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        channel_id = VALUES(channel_id),
+        resource_id = VALUES(resource_id),
+        saved_page_token = VALUES(saved_page_token),
+        expiration = VALUES(expiration),
+        last_updated = NOW()
+      `,
+      [channelId, resourceId, startPageToken, expiration]
+    );
 
     console.log("Watch response:", watchResponse.data);
   }
@@ -82,7 +135,6 @@ export class GoogleDriveService {
 
         const files: drive_v3.Schema$File[] = res.data.files || [];
 
-        // Separate folders and files
         const folderFiles = files.filter(
           (file) => file.mimeType !== "application/vnd.google-apps.folder"
         );
@@ -107,6 +159,40 @@ export class GoogleDriveService {
     } catch (err) {
       console.error("Error listing files:", err);
       throw err;
+    }
+  }
+
+  private async getChannelIdAndStartPageToken(): Promise<WatchDrive | null> {
+    try {
+      // Example query: select the first record (if you store only one channel)
+      const result = await this.sql.executeSQL<RowDataPacket[]>(`
+        SELECT 
+          channel_id, 
+          resource_id, 
+          saved_page_token, 
+          expiration, 
+          last_updated
+        FROM drive_watch
+        ORDER BY id
+        LIMIT 1
+      `);
+
+      if (!result || result.length === 0) {
+        return null;
+      }
+
+      const row = result[0];
+
+      return {
+        channelId: row.channel_id,
+        resourceId: row.resource_id,
+        savedPageToken: row.saved_page_token,
+        expiration: row.expiration ? parseInt(row.expiration, 10) : null,
+        lastUpdated: row.last_updated,
+      };
+    } catch (err) {
+      console.error("Error while getting channelId or PageToken: ", err);
+      return null;
     }
   }
 }
