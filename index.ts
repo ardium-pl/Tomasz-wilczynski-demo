@@ -111,8 +111,8 @@ async function processSingleFile(
 const updateStartPageTokenInDB = async (channelId: string, newStartPageToken: string) => {
   const query = `
   UPDATE drive_watch
-  SET startPageToken = ?
-  WHERE channelId = ?;
+  SET saved_page_token = ?
+  WHERE channel_id = ?;
   `;
   
   try {
