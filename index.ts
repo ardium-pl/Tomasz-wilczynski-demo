@@ -110,7 +110,7 @@ async function processSingleFile(
 }
 const updateStartPageTokenInDB = async (channelId: string, newStartPageToken: string) => {
   const query = `
-  UPDATE your_table_name
+  UPDATE drive_watch
   SET startPageToken = ?
   WHERE channelId = ?;
   `;
@@ -216,7 +216,7 @@ async function handleDriveChangeNotification() {
     );
     try {
       if(!sqlWatchData) return;
-      
+
       await updateStartPageTokenInDB(sqlWatchData.channelId, savedPageToken);
     } catch (err) {
       console.error("Failed to update startPageToken in the database:", err);
