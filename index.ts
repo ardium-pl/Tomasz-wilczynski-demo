@@ -208,20 +208,21 @@ async function handleDriveChangeNotification() {
       "[handleDriveChangeNotification] No changes returned from the Drive changes list."
     );
   }
-
-  if (res.data.newStartPageToken) {
+  
+  const newStartPageToken = res.data.newStartPageToken;
+  if (newStartPageToken) {
     logger.info(
       "[handleDriveChangeNotification] Updating savedPageToken to:",
-      res.data.newStartPageToken
+      newStartPageToken
     );
     try {
       if(!sqlWatchData) return;
 
-      await updateStartPageTokenInDB(sqlWatchData.channelId, savedPageToken);
+      await updateStartPageTokenInDB(sqlWatchData.channelId, newStartPageToken);
     } catch (err) {
       console.error("Failed to update startPageToken in the database:", err);
     }
-    savedPageToken = res.data.newStartPageToken;
+    savedPageToken = newStartPageToken;
     
   }
 
