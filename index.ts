@@ -45,7 +45,7 @@ app.post("/drive/webhook", async (req, res) => {
   // Acknowledge the webhook quickly
   res.sendStatus(200);
 
-  if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
+  if (resourceState === "change" && channelId == sqlWatchData?.channelId) {
     try {
       logger.info("🔔 Received Drive change notification. Processing...");
       // await handleDriveChangeNotification();
