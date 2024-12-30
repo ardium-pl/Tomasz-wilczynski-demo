@@ -50,7 +50,7 @@ export class GoogleDriveService {
 
   public async watchDriveChanges() {
     // 1) Try to get existing channel & token from DB
-    const existingRecord = await this.getChannelIdAndStartPageToken();
+    const existingRecord = await this.getWatchDriveData();
 
     if (existingRecord) {
       // OPTIONAL: If you store 'expiration' in the table, check if it's still valid
@@ -162,7 +162,7 @@ export class GoogleDriveService {
     }
   }
 
-  public async getChannelIdAndStartPageToken(): Promise<WatchDrive | null> {
+  public async getWatchDriveData(): Promise<WatchDrive | null> {
     try {
       // Example query: select the first record (if you store only one channel)
       const result = await this.sql.executeSQL<RowDataPacket[]>(`

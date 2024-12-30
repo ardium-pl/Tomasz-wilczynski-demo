@@ -1,7 +1,7 @@
+import ansis from "ansis";
+import cors from "cors";
 import "dotenv/config";
-import ansis from 'ansis';
-import cors from 'cors';
-import express from 'express';
+import express from "express";
 import { drive_v3 } from "googleapis";
 import { GoogleDriveService } from "./src/services/drive/google-api.ts";
 import { pdfOCR } from "./src/services/ocr/ocr.ts";
@@ -15,7 +15,6 @@ import {
 } from "./src/utils/constants.ts";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
-import { sql } from "googleapis/build/src/apis/sql/index";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,7 +22,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-let savedPageToken: string | null = null;
+const driveWatch = new GoogleDriveService();
+const sqlWatchData = await driveWatch.getWatchDriveData();
+let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
+let debounceTimer: NodeJS.Timeout | null = null;
+const DEBOUNCE_MS = 10000; // 10 seconds
 
 // Webhook endpoint
 app.post("/drive/webhook", async (req, res) => {
@@ -31,9 +34,6 @@ app.post("/drive/webhook", async (req, res) => {
   const resourceState = req.header("X-Goog-Resource-State");
   const resourceId = req.header("X-Goog-Resource-Id");
   const messageNumber = req.header("X-Goog-Message-Number");
-
-  const driveWatch = new GoogleDriveService();
-  const sqlWatchData = await driveWatch.getChannelIdAndStartPageToken();
 
   console.log("Received Drive webhook notification:", {
     channelId,
@@ -47,7 +47,27 @@ app.post("/drive/webhook", async (req, res) => {
 
   if (resourceState === "change" && channelId == sqlWatchData?.channelId) {
     try {
-      logger.info("🔔 Received Drive change notification. Processing...");
+      logger.info(
+        `[debounce] Scheduling handleDriveChangeNotification in ${
+          DEBOUNCE_MS / 1000
+        }s`
+      );
+
+      // Clear any previously scheduled run
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      debounceTimer = setTimeout(async () => {
+        debounceTimer = null;
+        try {
+          logger.info(
+            "[debounce] Triggering handleDriveChangeNotification now..."
+          );
+          // await handleDriveChangeNotification();
+        } catch (err) {
+          logger.error("Error during handleDriveChangeNotification:", err);
+        }
+      }, DEBOUNCE_MS);
       // await handleDriveChangeNotification();
     } catch (err) {
       console.error("Error handling Drive change:", err);
@@ -89,7 +109,6 @@ async function processSingleFile(
   }
 }
 
-
 async function handleDriveChangeNotification() {
   logger.info("[handleDriveChangeNotification] Entered function.");
 
@@ -97,51 +116,85 @@ async function handleDriveChangeNotification() {
   logger.info("[handleDriveChangeNotification] Drive client initialized.");
 
   // Check if we already have a saved page token
-  logger.info("[handleDriveChangeNotification] Checking savedPageToken:", savedPageToken);
+  logger.info(
+    "[handleDriveChangeNotification] Checking savedPageToken:",
+    savedPageToken
+  );
   if (!savedPageToken) {
-    logger.info("[handleDriveChangeNotification] No savedPageToken found. Fetching fresh token...");
+    logger.info(
+      "[handleDriveChangeNotification] No savedPageToken found. Fetching fresh token..."
+    );
     const { data } = await drive.changes.getStartPageToken();
     if (!data.startPageToken) {
-      logger.error("[handleDriveChangeNotification] No startPageToken found; cannot process changes.");
+      logger.error(
+        "[handleDriveChangeNotification] No startPageToken found; cannot process changes."
+      );
       return;
     }
     savedPageToken = data.startPageToken;
-    logger.info("[handleDriveChangeNotification] Fetched new startPageToken:", savedPageToken);
+    logger.info(
+      "[handleDriveChangeNotification] Fetched new startPageToken:",
+      savedPageToken
+    );
   }
 
-  logger.info("[handleDriveChangeNotification] Listing changes with pageToken:", savedPageToken);
-  const res = await drive.changes.list({ 
+  logger.info(
+    "[handleDriveChangeNotification] Listing changes with pageToken:",
+    savedPageToken
+  );
+  const res = await drive.changes.list({
     pageToken: savedPageToken,
-    fields: "*"
+    fields: "*",
   });
 
-  logger.info("[handleDriveChangeNotification] changes.list response:", res.data);
+  logger.info(
+    "[handleDriveChangeNotification] changes.list response:",
+    res.data
+  );
 
   if (res.data.changes) {
-    logger.info(`[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`);
+    logger.info(
+      `[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`
+    );
     for (const change of res.data.changes) {
       logger.info(`[handleDriveChangeNotification] Processing change:`, change);
-      logger.info(`Folder: ${change.file?.parents}, File: ${change.file?.name}`);
+      logger.info(
+        `Folder: ${change.file?.parents}, File: ${change.file?.name}`
+      );
       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
-        logger.info("[handleDriveChangeNotification] New file detected in PDF folder:", change.file.name);
-        
+        logger.info(
+          "[handleDriveChangeNotification] New file detected in PDF folder:",
+          change.file.name
+        );
+
         // Here you can process the file directly, or run your 'main' logic:
-        logger.info("[handleDriveChangeNotification] Calling main() to re-process the PDF folder.");
+        logger.info(
+          "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
+        );
         await main();
       } else {
-        logger.info("[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping.");
+        logger.info(
+          "[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping."
+        );
       }
     }
   } else {
-    logger.info("[handleDriveChangeNotification] No changes returned from the Drive changes list.");
+    logger.info(
+      "[handleDriveChangeNotification] No changes returned from the Drive changes list."
+    );
   }
 
   if (res.data.newStartPageToken) {
-    logger.info("[handleDriveChangeNotification] Updating savedPageToken to:", res.data.newStartPageToken);
+    logger.info(
+      "[handleDriveChangeNotification] Updating savedPageToken to:",
+      res.data.newStartPageToken
+    );
     savedPageToken = res.data.newStartPageToken;
   }
 
-  logger.info("[handleDriveChangeNotification] Completed processing changes.\n");
+  logger.info(
+    "[handleDriveChangeNotification] Completed processing changes.\n"
+  );
 }
 
 async function main(): Promise<void> {
