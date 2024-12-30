@@ -15,6 +15,7 @@ import {
 } from "./src/utils/constants.ts";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
+import { MySqlService } from "./src/services/db/mySql.ts";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,10 +24,11 @@ app.use(express.json());
 app.use(cors());
 
 const driveWatch = new GoogleDriveService();
+const sql = new MySqlService();
 const sqlWatchData = await driveWatch.getWatchDriveData();
 let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
-const DEBOUNCE_MS = 10000; // 10 seconds
+const DEBOUNCE_MS = 20000; // 20 seconds
 
 // Webhook endpoint
 app.post("/drive/webhook", async (req, res) => {
@@ -90,15 +92,15 @@ async function processSingleFile(
     logger.info(`🧾 Downloading PDF: ${file.name}`);
     const pdfFilePath = await downloadFile(file.id, inputPdfFolder, file.name);
     logger.info(`🧾 PDF downloaded to: ${pdfFilePath}`);
-
+    
     logger.info(`🔍 Performing OCR on PDF: ${file.name}`);
     const ocrDataText = await pdfOCR(pdfFilePath);
     logger.info(`📄 OCR Extracted Text: ${ocrDataText}`);
-
+    
     logger.info(`🧩 Parsing OCR text into JSON schema: ${file.name}`);
     const parsedData = await parseOcrText(ocrDataText);
     logger.info("📦 Parsed JSON Schema: ", parsedData);
-
+    
     allInvoiceData.push(parsedData);
   } catch (err: any) {
     logger.error(
@@ -106,10 +108,35 @@ async function processSingleFile(
     );
   }
 }
+const updateStartPageTokenInDB = async (channelId: string, newStartPageToken: string) => {
+  const query = `
+  UPDATE your_table_name
+  SET startPageToken = ?
+  WHERE channelId = ?;
+  `;
+  
+  try {
+    const connection = await sql.createTcpConnection();
+
+    if(!connection) return;
+
+    const [result] = await connection.execute(query, [newStartPageToken, channelId]);
+    logger.info(
+      `Updated startPageToken to ${newStartPageToken} for channelId: ${channelId}.`
+    );
+    return result;
+  } catch (error) {
+    console.error(
+      `Error updating startPageToken for channelId: ${channelId}:`,
+      error
+    );
+    throw error;
+  }
+};
 
 async function handleDriveChangeNotification() {
   logger.info("[handleDriveChangeNotification] Entered function.");
-
+  
   const drive = googleDrive.drive;
   logger.info("[handleDriveChangeNotification] Drive client initialized.");
 
@@ -187,7 +214,15 @@ async function handleDriveChangeNotification() {
       "[handleDriveChangeNotification] Updating savedPageToken to:",
       res.data.newStartPageToken
     );
+    try {
+      if(!sqlWatchData) return;
+      
+      await updateStartPageTokenInDB(sqlWatchData.channelId, savedPageToken);
+    } catch (err) {
+      console.error("Failed to update startPageToken in the database:", err);
+    }
     savedPageToken = res.data.newStartPageToken;
+    
   }
 
   logger.info(
@@ -236,6 +271,7 @@ async function main(): Promise<void> {
     );
   }
 }
+
 // Startup
 logger.info(`Starting server...`);
 app.listen(PORT, async () => {

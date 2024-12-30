@@ -49,11 +49,9 @@ export class GoogleDriveService {
   }
 
   public async watchDriveChanges() {
-    // 1) Try to get existing channel & token from DB
     const existingRecord = await this.getWatchDriveData();
 
     if (existingRecord) {
-      // OPTIONAL: If you store 'expiration' in the table, check if it's still valid
       const now = Date.now();
       const channelIsValid =
         existingRecord.expiration && existingRecord.expiration > now;
