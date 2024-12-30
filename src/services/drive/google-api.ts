@@ -6,15 +6,14 @@ import { v4 as uuidv4 } from "uuid";
 
 export class GoogleDriveService {
   public readonly drive: drive_v3.Drive;
-  private readonly uniqueChannelId = uuidv4();
-
+  
   constructor() {
     this.drive = google.drive({ version: "v3", auth });
   }
   public async listAllFiles(folderId: string): Promise<drive_v3.Schema$File[]> {
     return this.listFilesInFolder(folderId);
   }
-
+  
   public async uploadFile(
     folderId: string,
     fileName: string,
@@ -24,28 +23,29 @@ export class GoogleDriveService {
       name: fileName,
       parents: [folderId],
     };
-
+    
     const fileMimeType = mime.getType(filePath) || "application/octet-stream";
     const media = {
       mimeType: fileMimeType,
       body: fs.createReadStream(filePath),
     };
-
+    
     try {
       const response = await this.drive.files.create({
         requestBody: fileMetadata,
         media,
         fields: "id, name, mimeType, parents",
       });
-
+      
       return response.data;
     } catch (error) {
       console.error("Error uploading file:", error);
       throw error;
     }
   }
-
+  
   public async watchDriveChanges() {
+    const uniqueChannelId = uuidv4();
     const {
       data: { startPageToken },
     } = await this.drive.changes.getStartPageToken();
@@ -54,7 +54,7 @@ export class GoogleDriveService {
 
     const watchResponse = await this.drive.changes.watch({
       requestBody: {
-        id: this.uniqueChannelId,
+        id: uniqueChannelId,
         type: "web_hook",
         address:
           "https://tomasz-wilczynski-demo-production.up.railway.app/drive/webhook",
