@@ -162,7 +162,7 @@ export class GoogleDriveService {
     }
   }
 
-  private async getChannelIdAndStartPageToken(): Promise<WatchDrive | null> {
+  public async getChannelIdAndStartPageToken(): Promise<WatchDrive | null> {
     try {
       // Example query: select the first record (if you store only one channel)
       const result = await this.sql.executeSQL<RowDataPacket[]>(`

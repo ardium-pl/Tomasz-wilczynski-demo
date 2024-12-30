@@ -15,6 +15,7 @@ import {
 } from "./src/utils/constants.ts";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
+import { sql } from "googleapis/build/src/apis/sql/index";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,9 @@ app.post("/drive/webhook", async (req, res) => {
   const resourceId = req.header("X-Goog-Resource-Id");
   const messageNumber = req.header("X-Goog-Message-Number");
 
+  const driveWatch = new GoogleDriveService();
+  const sqlWatchData = await driveWatch.getChannelIdAndStartPageToken();
+
   console.log("Received Drive webhook notification:", {
     channelId,
     resourceState,
@@ -41,7 +45,7 @@ app.post("/drive/webhook", async (req, res) => {
   // Acknowledge the webhook quickly
   res.sendStatus(200);
 
-  if (resourceState === "change") {
+  if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
     try {
       logger.info("🔔 Received Drive change notification. Processing...");
       // await handleDriveChangeNotification();
