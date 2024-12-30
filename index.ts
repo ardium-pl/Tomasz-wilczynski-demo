@@ -169,7 +169,7 @@ async function handleDriveChangeNotification() {
         logger.info(
           "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
         );
-        await main();
+        // await main();
       } else {
         logger.info(
           "[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping."
