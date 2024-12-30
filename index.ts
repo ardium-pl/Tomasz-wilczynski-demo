@@ -42,7 +42,6 @@ app.post("/drive/webhook", async (req, res) => {
     messageNumber,
   });
 
-  // Acknowledge the webhook quickly
   res.sendStatus(200);
 
   if (resourceState === "change" && channelId == sqlWatchData?.channelId) {
@@ -63,12 +62,11 @@ app.post("/drive/webhook", async (req, res) => {
           logger.info(
             "[debounce] Triggering handleDriveChangeNotification now..."
           );
-          // await handleDriveChangeNotification();
+          await handleDriveChangeNotification();
         } catch (err) {
           logger.error("Error during handleDriveChangeNotification:", err);
         }
       }, DEBOUNCE_MS);
-      // await handleDriveChangeNotification();
     } catch (err) {
       console.error("Error handling Drive change:", err);
     }
