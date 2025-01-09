@@ -28,7 +28,7 @@ const sql = new MySqlService();
 const sqlWatchData = await driveWatch.getWatchDriveData();
 let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
-const DEBOUNCE_MS = 5000;
+const DEBOUNCE_MS = 20000;
 const pendingChanges = new Set<string>();
 
 app.post("/drive/webhook", async (req, res) => {
@@ -61,8 +61,8 @@ app.post("/drive/webhook", async (req, res) => {
               logger.info(
                 "Changes detected, processing all pending notifications..."
               );
-              await main(); // Process all pending changes
-              pendingChanges.clear(); // Clear the pending changes
+              await main(); 
+              pendingChanges.clear(); 
             } else {
               logger.info("No relevant changes detected.");
             }
