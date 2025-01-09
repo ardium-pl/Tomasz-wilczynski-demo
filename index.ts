@@ -206,7 +206,7 @@ async function handleDriveChangeNotification() {
         logger.info(
           "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
         );
-        await main();
+        // await main();
         break;
       } else {
         logger.info(
