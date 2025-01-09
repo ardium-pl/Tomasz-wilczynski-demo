@@ -45,7 +45,7 @@ app.post("/drive/webhook", async (req, res) => {
   });
 
   res.sendStatus(200);
-
+  console.log("channelId", channelId, "sqlWatchData?.channelId", sqlWatchData?.channelId);
   if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
     try {
       logger.info("File change detected, adding to debounce queue.");
