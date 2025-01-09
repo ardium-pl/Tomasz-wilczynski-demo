@@ -61,7 +61,7 @@ app.post("/drive/webhook", async (req, res) => {
               logger.info(
                 "Changes detected, processing all pending notifications..."
               );
-              await main(); 
+              await handleDriveChangeNotification();
               pendingChanges.clear(); 
             } else {
               logger.info("No relevant changes detected.");
@@ -151,7 +151,6 @@ async function handleDriveChangeNotification() {
   const drive = googleDrive.drive;
   logger.info("[handleDriveChangeNotification] Drive client initialized.");
 
-  // Check if we already have a saved page token
   logger.info(
     "[handleDriveChangeNotification] Checking savedPageToken:",
     savedPageToken
@@ -207,7 +206,8 @@ async function handleDriveChangeNotification() {
         logger.info(
           "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
         );
-        // await main();
+        await main();
+        break;
       } else {
         logger.info(
           "[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping."
