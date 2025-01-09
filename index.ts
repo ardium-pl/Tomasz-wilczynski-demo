@@ -16,6 +16,7 @@ import {
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
 import { MySqlService } from "./src/services/db/mySql.ts";
+import { WatchDrive } from "./src/utils/allTypes.ts";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,8 +26,18 @@ app.use(cors());
 
 const driveWatch = new GoogleDriveService();
 const sql = new MySqlService();
-const sqlWatchData = await driveWatch.getWatchDriveData();
-let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
+let sqlWatchData: WatchDrive | null = await driveWatch.getWatchDriveData();
+
+if (!sqlWatchData || !sqlWatchData.expiration || sqlWatchData.expiration < Date.now()) {
+  logger.info("Channel expired or missing. Setting up a new watch channel...");
+  sqlWatchData = await driveWatch.watchDriveChanges();
+
+  if (!sqlWatchData) {
+    throw new Error("Failed to set up Drive watch channel. Exiting...");
+  }
+}
+
+let savedPageToken: string | undefined = sqlWatchData.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
 const DEBOUNCE_MS = 20000;
 const pendingChanges = new Set<string>();
@@ -174,7 +185,7 @@ async function handleDriveChangeNotification() {
   }
 
   logger.info(
-    "[handleDriveChangeNotification] Listing changes with pageToken:",
+    "[handleDriveChangeNotification] Listing changes with pageToken:" + 
     savedPageToken
   );
   const res = await drive.changes.list({
@@ -184,7 +195,6 @@ async function handleDriveChangeNotification() {
 
   logger.info(
     "[handleDriveChangeNotification] changes.list response:",
-    res.data
   );
 
   if (res.data.changes) {

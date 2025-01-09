@@ -48,19 +48,18 @@ export class GoogleDriveService {
     }
   }
 
-  public async watchDriveChanges() {
+  public async watchDriveChanges(): Promise<WatchDrive | null> {
     const existingRecord = await this.getWatchDriveData();
-
+  
     if (existingRecord) {
       const now = Date.now();
       const channelIsValid =
         existingRecord.expiration && existingRecord.expiration > now;
-
+  
       if (channelIsValid) {
         console.log(`[watchDriveChanges] Existing channel is still valid. 
                      Channel ID: ${existingRecord.channelId}`);
-        // We can stop here because we already have a channel that hasn't expired.
-        return;
+        return existingRecord; // Return existing valid record
       } else {
         console.log(`[watchDriveChanges] Existing channel is expired or missing expiration. 
                      Will create a new one.`);
@@ -70,17 +69,15 @@ export class GoogleDriveService {
         "[watchDriveChanges] No existing channel found. Creating a new one..."
       );
     }
-
-    // 2) Fetch startPageToken from Drive
+  
     const {
       data: { startPageToken },
     } = await this.drive.changes.getStartPageToken();
     if (!startPageToken) {
       console.error("No start page token found. Cannot watch changes.");
-      return;
+      return null;
     }
-
-    // 3) Create a new watch channel
+  
     const uniqueChannelId = uuidv4();
     const watchResponse = await this.drive.changes.watch({
       requestBody: {
@@ -91,14 +88,11 @@ export class GoogleDriveService {
       },
       pageToken: startPageToken,
     });
-
+  
     const { id: channelId, resourceId, expiration } = watchResponse.data;
-
-    // 4) Insert or update the DB record
+  
     const connection = await this.sql.createTcpConnection();
-
-    // If you only ever keep ONE record in drive_watch,
-    // you might do an UPSERT logic:
+  
     await connection?.query(
       `
       INSERT INTO drive_watch (channel_id, resource_id, saved_page_token, expiration, last_updated)
@@ -112,9 +106,20 @@ export class GoogleDriveService {
       `,
       [channelId, resourceId, startPageToken, expiration]
     );
-
+  
     console.log("Watch response:", watchResponse.data);
+  
+    if(!channelId || !resourceId) return null;
+
+    return {
+      channelId,
+      resourceId,
+      savedPageToken: startPageToken,
+      expiration: expiration ? parseInt(expiration, 10) : null,
+      lastUpdated: new Date(),
+    };
   }
+  
 
   private async listFilesInFolder(
     folderId: string
