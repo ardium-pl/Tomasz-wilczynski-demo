@@ -28,7 +28,7 @@ const sql = new MySqlService();
 const sqlWatchData = await driveWatch.getWatchDriveData();
 let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
-const DEBOUNCE_MS = 20000; // 20 seconds
+const DEBOUNCE_MS = 20000;
 const changedFolders = new Set<string>();
 
 app.post("/drive/webhook", async (req, res) => {
@@ -60,14 +60,19 @@ app.post("/drive/webhook", async (req, res) => {
 
         try {
           if (changedFolders.has(PDF_FOLDER_ID)) {
-            logger.info("Changes detected in PDF_FOLDER_ID, processing files...");
-            await main();
-            changedFolders.clear();
+            logger.info(
+              "Changes detected in PDF_FOLDER_ID, processing files..."
+            );
+            await main(); // Call main() to process the changes
+            changedFolders.clear(); // Clear the changes set
           } else {
             logger.info("No relevant changes detected.");
           }
         } catch (err) {
           logger.error("Error during debounced processing:", err);
+        } finally {
+          // Reinitialize the debounce mechanism for subsequent changes
+          changedFolders.clear();
         }
       }, DEBOUNCE_MS);
     } catch (err) {
@@ -75,6 +80,7 @@ app.post("/drive/webhook", async (req, res) => {
     }
   }
 });
+
 const googleDrive = new GoogleDriveService();
 
 async function processSingleFile(
@@ -92,15 +98,15 @@ async function processSingleFile(
     logger.info(`🧾 Downloading PDF: ${file.name}`);
     const pdfFilePath = await downloadFile(file.id, inputPdfFolder, file.name);
     logger.info(`🧾 PDF downloaded to: ${pdfFilePath}`);
-    
+
     logger.info(`🔍 Performing OCR on PDF: ${file.name}`);
     const ocrDataText = await pdfOCR(pdfFilePath);
     logger.info(`📄 OCR Extracted Text: ${ocrDataText}`);
-    
+
     logger.info(`🧩 Parsing OCR text into JSON schema: ${file.name}`);
     const parsedData = await parseOcrText(ocrDataText);
     logger.info("📦 Parsed JSON Schema: ", parsedData);
-    
+
     allInvoiceData.push(parsedData);
   } catch (err: any) {
     logger.error(
@@ -108,19 +114,25 @@ async function processSingleFile(
     );
   }
 }
-const updateStartPageTokenInDB = async (channelId: string, newStartPageToken: string) => {
+const updateStartPageTokenInDB = async (
+  channelId: string,
+  newStartPageToken: string
+) => {
   const query = `
   UPDATE drive_watch
   SET saved_page_token = ?
   WHERE channel_id = ?;
   `;
-  
+
   try {
     const connection = await sql.createTcpConnection();
 
-    if(!connection) return;
+    if (!connection) return;
 
-    const [result] = await connection.execute(query, [newStartPageToken, channelId]);
+    const [result] = await connection.execute(query, [
+      newStartPageToken,
+      channelId,
+    ]);
     logger.info(
       `Updated startPageToken to ${newStartPageToken} for channelId: ${channelId}.`
     );
@@ -136,7 +148,7 @@ const updateStartPageTokenInDB = async (channelId: string, newStartPageToken: st
 
 async function handleDriveChangeNotification() {
   logger.info("[handleDriveChangeNotification] Entered function.");
-  
+
   const drive = googleDrive.drive;
   logger.info("[handleDriveChangeNotification] Drive client initialized.");
 
@@ -208,7 +220,7 @@ async function handleDriveChangeNotification() {
       "[handleDriveChangeNotification] No changes returned from the Drive changes list."
     );
   }
-  
+
   const newStartPageToken = res.data.newStartPageToken;
   if (newStartPageToken) {
     logger.info(
@@ -216,14 +228,13 @@ async function handleDriveChangeNotification() {
       newStartPageToken
     );
     try {
-      if(!sqlWatchData) return;
+      if (!sqlWatchData) return;
 
       await updateStartPageTokenInDB(sqlWatchData.channelId, newStartPageToken);
     } catch (err) {
       console.error("Failed to update startPageToken in the database:", err);
     }
     savedPageToken = newStartPageToken;
-    
   }
 
   logger.info(
