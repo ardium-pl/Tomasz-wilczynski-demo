@@ -1,5 +1,4 @@
-// Types generated based on the provided XML schema.
-// This is a single file version.
+import { DekretType, StawkaType } from "../openAi/invoiceJsonSchema";
 
 type Flag = 'nie' | 'tak';
 type Money = string; // decimal with two fraction digits
@@ -10,16 +9,6 @@ type Ryczalt =
   | '3.0%' | '5.5%' | '8.5%' | '10%' | '12%' | '14%' 
   | 'N'    | '2'     | '1';
 
-type Dekret = 
-  | 'sprz'   // sprzedaż towarów lub usług
-  | 'utarg'  // utarg
-  | 'przych' // pozostałe przychody
-  | 'zakup'  // zakup towarów handlowych
-  | 'koszt'  // koszty uboczne zakupu
-  | 'wynagr' // wynagrodzenia
-  | 'wydatek'// pozostałe wydatki
-  | 'st'     // nabycie środka trwałego
-  | 'BR';    // koszt działalności badawczo-rozwojowej
 
 interface Pojazd {
   nr?: string;
@@ -28,10 +17,10 @@ interface Pojazd {
 }
 
 interface Suma {
-  netto?: Money;
-  VAT?: Money;
+  netto?: number;
+  VAT?: number;
   $: {
-    stawka: 'zw' | 'NP' | '0K' | '0R' | '0E' | '0F' | 'TAXI' | 'RR' | 'super' | 'obniz' | 'podst';
+    stawka: StawkaType;
     ext?: 'art100' | 'BO';
   };
 }
@@ -124,7 +113,7 @@ interface Dokument {
   rejVAT?: RejVAT;
   zaplata?: Zaplata[];
   $?: {
-    dekret?: Dekret;       // default="sprz"
+    dekret?: DekretType;       // default="sprz"
   };
 }
 
