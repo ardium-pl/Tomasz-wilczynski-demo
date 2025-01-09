@@ -28,8 +28,8 @@ const sql = new MySqlService();
 const sqlWatchData = await driveWatch.getWatchDriveData();
 let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
-const DEBOUNCE_MS = 20000;
-const changedFolders = new Set<string>();
+const DEBOUNCE_MS = 5000;
+const pendingChanges = new Set<string>();
 
 app.post("/drive/webhook", async (req, res) => {
   const channelId = req.header("X-Goog-Channel-Id");
@@ -45,41 +45,40 @@ app.post("/drive/webhook", async (req, res) => {
   });
 
   res.sendStatus(200);
-  console.log("channelId", channelId, "sqlWatchData?.channelId", sqlWatchData?.channelId);
+
   if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
     try {
-      logger.info("File change detected, adding to debounce queue.");
-      changedFolders.add(PDF_FOLDER_ID);
+      logger.info("File change detected, adding to pending changes.");
+      pendingChanges.add(PDF_FOLDER_ID);
 
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      if (!debounceTimer) {
+        logger.info("Starting debounce timer...");
+        debounceTimer = setTimeout(async () => {
+          debounceTimer = null;
 
-      debounceTimer = setTimeout(async () => {
-        debounceTimer = null;
-
-        try {
-          if (changedFolders.has(PDF_FOLDER_ID)) {
-            logger.info(
-              "Changes detected in PDF_FOLDER_ID, processing files..."
-            );
-            await main(); // Call main() to process the changes
-            changedFolders.clear(); // Clear the changes set
-          } else {
-            logger.info("No relevant changes detected.");
+          try {
+            if (pendingChanges.size > 0) {
+              logger.info(
+                "Changes detected, processing all pending notifications..."
+              );
+              await main(); // Process all pending changes
+              pendingChanges.clear(); // Clear the pending changes
+            } else {
+              logger.info("No relevant changes detected.");
+            }
+          } catch (err) {
+            logger.error("Error during debounced processing:", err);
           }
-        } catch (err) {
-          logger.error("Error during debounced processing:", err);
-        } finally {
-          // Reinitialize the debounce mechanism for subsequent changes
-          changedFolders.clear();
-        }
-      }, DEBOUNCE_MS);
+        }, DEBOUNCE_MS);
+      } else {
+        logger.info("Debounce timer already running; additional changes added.");
+      }
     } catch (err) {
       logger.error("Error handling Drive change:", err);
     }
   }
 });
+
 
 const googleDrive = new GoogleDriveService();
 
