@@ -29,15 +29,15 @@ const sqlWatchData = await driveWatch.getWatchDriveData();
 let savedPageToken: string | undefined = sqlWatchData?.savedPageToken;
 let debounceTimer: NodeJS.Timeout | null = null;
 const DEBOUNCE_MS = 20000; // 20 seconds
+const changedFolders = new Set<string>();
 
-// Webhook endpoint
 app.post("/drive/webhook", async (req, res) => {
   const channelId = req.header("X-Goog-Channel-Id");
   const resourceState = req.header("X-Goog-Resource-State");
   const resourceId = req.header("X-Goog-Resource-Id");
   const messageNumber = req.header("X-Goog-Message-Number");
 
-  console.log("Received Drive webhook notification:", {
+  logger.info("Received Drive webhook notification:", {
     channelId,
     resourceState,
     resourceId,
@@ -45,36 +45,36 @@ app.post("/drive/webhook", async (req, res) => {
   });
 
   res.sendStatus(200);
-  console.log("channelId: ", channelId, "sqlWatchData?.channelId: ", sqlWatchData?.channelId);
-  if (resourceState === "change" && channelId == sqlWatchData?.channelId) {
-    try {
-      logger.info(
-        `[debounce] Scheduling handleDriveChangeNotification in ${
-          DEBOUNCE_MS / 1000
-        }s`
-      );
 
-      // Clear any previously scheduled run
+  if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
+    try {
+      logger.info("File change detected, adding to debounce queue.");
+      changedFolders.add(PDF_FOLDER_ID);
+
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
+
       debounceTimer = setTimeout(async () => {
         debounceTimer = null;
+
         try {
-          logger.info(
-            "[debounce] Triggering handleDriveChangeNotification now..."
-          );
-          await handleDriveChangeNotification();
+          if (changedFolders.has(PDF_FOLDER_ID)) {
+            logger.info("Changes detected in PDF_FOLDER_ID, processing files...");
+            await main();
+            changedFolders.clear();
+          } else {
+            logger.info("No relevant changes detected.");
+          }
         } catch (err) {
-          logger.error("Error during handleDriveChangeNotification:", err);
+          logger.error("Error during debounced processing:", err);
         }
       }, DEBOUNCE_MS);
     } catch (err) {
-      console.error("Error handling Drive change:", err);
+      logger.error("Error handling Drive change:", err);
     }
   }
 });
-
 const googleDrive = new GoogleDriveService();
 
 async function processSingleFile(
