@@ -1,8 +1,9 @@
-import { google } from "googleapis";
+import { google,  } from "googleapis";
 import OpenAI from "openai";
 import path from "path";
 
-export const auth = new google.auth.JWT({
+// without the any type, the code is bitching, idk why
+export const auth:any = new google.auth.JWT({
   email: process.env.GOOGLE_CLIENT_EMAIL as string,
   key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(/\\n/g, "\n"),
   scopes: ["https://www.googleapis.com/auth/drive"],
