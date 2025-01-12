@@ -1,5 +1,5 @@
 # Use the full Node.js image instead of slim
-FROM node:18.17.0
+FROM node:18.19.0
 
 # Set the working directory for the backend
 WORKDIR /app/server
