@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y poppler-utils
 WORKDIR /app/client
 
 # Copy frontend package.json and package-lock.json
-COPY frontend/package*.json ./
+COPY client/package*.json ./
 
 # Install frontend dependencies
 RUN npm install
