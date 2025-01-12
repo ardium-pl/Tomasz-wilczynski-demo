@@ -1,12 +1,8 @@
-<form form="customerData" [formGroup]="customerData">
-<div class="container">
-    <label for="clientNameInput" class="input-label">Nazwa klienta</label>
-    <input id="clientNameInput" formControlName="clientName" placeholder="Wpisz nazwę klienta" class="input-field" />
-    <div class="checkbox-container">
-      <input id="isVatPayerCheckbox" type="checkbox" class="checkbox" formControlName="isVatPayer"/>
-      <label for="isVatPayerCheckbox" class="checkbox-label">Czy jest vatowcem</label>
-    </div>
-    
-    <button (click)="generateXml()" class="submit-button">Wyślij</button>
+<div class="app-container">
+  <div class="app-title">
+    <h1>OCR App for Generating XML Files from Invoices</h1>
+    <p>Created for Marcin Karpiński</p>
+  </div>
+
+  <router-outlet></router-outlet>
 </div>
-</form>

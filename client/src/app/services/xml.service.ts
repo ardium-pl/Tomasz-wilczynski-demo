@@ -1,40 +1,41 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { saveAs } from 'file-saver';
+import { finalize } from 'rxjs';
 import { InvoiceProcessorResponse } from 'src/environments/types';
-import * as xmljs from 'xml-js';
-import { FileSystemService } from '@ardium-ui/devkit';
 
 @Injectable({
   providedIn: 'root',
 })
 export class XmlService {
   private readonly http = inject(HttpClient);
-  private readonly fileSystemService = inject(FileSystemService);
+  public readonly isLoading = signal<boolean>(false);
 
-  generateXML(xmlString: string, clientName: string): void {
+  private generateXML(xmlString: string, clientName: string): void {
     const blob = new Blob([xmlString], { type: 'application/xml' });
 
-    this.fileSystemService.saveAs(blob, {
-      fileName: `${clientName}.xml`,
-      types: [{ description: 'Plik XML', accept: { 'application/xml': ['.xml'] } }],
-    });
+    saveAs(blob, `${clientName}.xml`);
   }
 
-  sendCustomerData(clientName: string, isVatPayer: boolean): void {
+  public async sendCustomerData(clientName: string, isVatPayer: boolean): Promise<void> {
+    this.isLoading.set(true);
     this.http
       .post<InvoiceProcessorResponse>('http://localhost:8080/api/invoice-processor', {
         clientName: clientName,
         isVatPayer: isVatPayer,
       })
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: res => {
           if (res.status === 'success') {
             console.log(`✅ Verification successful!`);
             this.generateXML(res.xmlString, clientName);
+            this.isLoading.set(false)
           }
         },
         error: err => {
           console.log('❌ Error performing the http request, error message:', err);
+          this.isLoading.set(false)
         },
       });
   }

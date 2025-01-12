@@ -3,10 +3,8 @@
 
 
 :root {
-  --example-variable: 'example value';
   --main-font: "Outfit", sans-serif;
-  // define css variables here
-  // remove the above variable after pasting the TEMPLATE
+  --bg: #f0eff3;
 }
 
 *,
@@ -18,16 +16,18 @@
   font: 1rem Outfit, sans-serif;
 }
 * {
-  margin: 0;
+  margin: 0.3rem;
   padding: 0;
 }
 html {
   scroll-behavior: smooth;
 }
 body {
+  background-color: var(--bg); 
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   position: relative;
+  overflow: hidden;
 }
 img,
 picture,
