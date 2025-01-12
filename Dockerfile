@@ -34,7 +34,7 @@ RUN pnpm install
 COPY client ./
 
 # Build the Angular application
-RUN pnpm run build -- --output-path=dist
+RUN npm run build
 
 # Move back to the root working directory to start the app
 WORKDIR /app
