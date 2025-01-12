@@ -17,20 +17,24 @@ COPY server ./
 # Install poppler-utils for PDF processing
 RUN apt-get update && apt-get install -y poppler-utils
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Set the working directory for the frontend
 WORKDIR /app/client
 
-# Copy frontend package.json and package-lock.json
-COPY client/package*.json ./
+# Copy frontend package.json and pnpm-lock.yaml
+COPY client/package*.json ./ 
+COPY client/pnpm-lock.yaml ./
 
-# Install frontend dependencies
-RUN npm install
+# Install frontend dependencies using pnpm
+RUN pnpm install
 
 # Copy the frontend source code
 COPY client ./
 
 # Build the Angular application
-RUN npm run build -- --output-path=dist
+RUN pnpm run build -- --output-path=dist
 
 # Move back to the root working directory to start the app
 WORKDIR /app
@@ -39,4 +43,4 @@ WORKDIR /app
 EXPOSE 8080 4200
 
 # Set up the startup command to run both the backend and serve the frontend
-CMD ["sh", "-c", "npx tsx backend/index.ts & npx http-server frontend/dist -p 4200"]
+CMD ["sh", "-c", "npx tsx server/index.ts & npx http-server client/dist -p 4200"]
