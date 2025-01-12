@@ -12,7 +12,7 @@ RUN npm install --production && \
     npm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx
 
 # Copy the backend source code
-COPY backend ./
+COPY server ./
 
 # Install poppler-utils for PDF processing
 RUN apt-get update && apt-get install -y poppler-utils
