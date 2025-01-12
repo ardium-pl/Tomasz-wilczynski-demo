@@ -14,5 +14,5 @@ app.use(bodyParser.json());
 app.use(invoiceProcessorRouter);
 
 app.listen(port, () => {
-  logger.info(`Server is running on http://localhost:${port}`);
+  logger.info(`Server is running on http://tomasz-wilczynski-demo-development.up.railway.app:${port}`);
 });

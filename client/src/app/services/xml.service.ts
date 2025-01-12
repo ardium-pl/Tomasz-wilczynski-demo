@@ -20,7 +20,7 @@ export class XmlService {
   public async sendCustomerData(clientName: string, isVatPayer: boolean): Promise<void> {
     this.isLoading.set(true);
     this.http
-      .post<InvoiceProcessorResponse>('http://localhost:8080/api/invoice-processor', {
+      .post<InvoiceProcessorResponse>('https://tomasz-wilczynski-demo-development.up.railway.app/api/invoice-processor', {
         clientName: clientName,
         isVatPayer: isVatPayer,
       })
