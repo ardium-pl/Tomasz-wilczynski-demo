@@ -16,9 +16,6 @@ COPY . .
 # Install poppler-utils for PDF processing
 RUN apt-get update && apt-get install -y poppler-utils
 
-
-RUN node -e "require('dotenv').config(); console.log(process.env)"
-
 # Build the application
 RUN pnpm run build
 
