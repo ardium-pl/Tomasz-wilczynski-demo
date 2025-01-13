@@ -5,7 +5,7 @@ FROM node:18.19.0
 WORKDIR /app
 
 # Copy the root package.json and lock files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 # Install root dependencies
 RUN npm install -g pnpm && pnpm install
