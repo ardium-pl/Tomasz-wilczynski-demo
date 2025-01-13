@@ -2,7 +2,7 @@
 FROM node:18.19.0
 
 # Set the working directory
-WORKDIR /app
+# WORKDIR /app
 
 # Copy the root package.json and lock files
 COPY package.json ./
