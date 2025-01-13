@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy the root package.json and lock files
 COPY package.json ./
-COPY .env /app/.env
+
 # Install root dependencies
 RUN npm install -g pnpm && pnpm install
 

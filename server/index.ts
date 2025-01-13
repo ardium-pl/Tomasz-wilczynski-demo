@@ -1,10 +1,11 @@
 import bodyParser from "body-parser";
 import cors from "cors";
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import { invoiceProcessorRouter } from "./api/routers.js";
 import { logger } from "./src/utils/logger.js";
 import { clientRouter } from "./client.js";
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8080;
