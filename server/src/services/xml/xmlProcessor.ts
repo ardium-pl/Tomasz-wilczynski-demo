@@ -3,14 +3,13 @@ import * as path from "path";
 import { Builder } from "xml2js";
 import { xmlFilesFolder } from "../../utils/constants";
 import { InvoiceDataType } from "../openAi/invoiceJsonSchema";
-import { Paczka } from "./types";
+import { Dokument, Paczka } from "./types";
 import { getVatPercentage } from "../../utils/xmlProcessor";
 
 export class XmlService {
-  public processDataToXml(data: InvoiceDataType[]): Paczka {
+  public processDataToXml(data: InvoiceDataType[], isVatPayer: boolean): Paczka {
     const firstMonth = data[0]?.documentDate.slice(0, 7) || "unknown";
-
-    
+  
     const paczka: Paczka = {
       $: {
         wersja: "15",
@@ -18,10 +17,7 @@ export class XmlService {
         KSeF: "prod",
       },
       dokument: data.map((item) => {
-        const vatPercentage = getVatPercentage(item.vatRate); 
-        const vatValue = +(item.invoiceNettoValue * vatPercentage).toFixed(2);
-  
-        return {
+        const documentObject: Dokument = {
           data: item.documentDate,
           data_wystawienia: item.documentDate,
           numer: item.invoiceNumber,
@@ -37,23 +33,29 @@ export class XmlService {
           $: {
             dekret: item.decret,
           },
-          rejVAT: {
+        };
+  
+        if (isVatPayer) {
+          documentObject.rejVAT = {
             suma: [
               {
                 netto: item.invoiceNettoValue,
-                VAT: vatValue,
+                VAT: item.vatValue,
                 $: {
                   stawka: item.vatRate,
                 },
               },
             ],
-          },
-        };
+          };
+        }
+  
+        return documentObject;
       }),
     };
   
     return paczka;
   }
+  
 
   public convertPaczkaToXml(processedXmlData: Paczka): string {
     const builder = new Builder({

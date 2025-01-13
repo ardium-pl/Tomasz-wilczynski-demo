@@ -28,16 +28,6 @@ const Stawka = z.enum([
 ]);
 
 
-const Product = z.object({
-  index: z.string(),
-  name: z.string(),
-  quantity: z.number(),
-  net_price: z.number(),
-  vat_rate: z.number(),
-  vat_value: z.number(),
-  gross_price: z.number(),
-});
-
 export const InvoiceData = z.object({
   invoiceNumber: z.string(),
   sellerNip: z.string(),
@@ -48,7 +38,6 @@ export const InvoiceData = z.object({
   invoiceNettoValue: z.number(),
   invoiceBruttoValue: z.number(),
   bankAccount: z.string(),
-  products: z.array(Product),
   vatRate: Stawka,
   decret: Dekret,
   vatValue: z.number().optional(),
@@ -56,6 +45,5 @@ export const InvoiceData = z.object({
 
 // Infer the types
 export type InvoiceDataType = z.infer<typeof InvoiceData>;
-export type ProductType = z.infer<typeof Product>;
 export type DekretType = z.infer<typeof Dekret>;
 export type StawkaType = z.infer<typeof Stawka>;

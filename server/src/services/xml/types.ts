@@ -94,7 +94,7 @@ interface Kontrahent {
   };
 }
 
-interface Dokument {
+export interface Dokument {
   data: string;           // xs:date (required)
   data_walut?: string;    // xs:date
   waluta?: {

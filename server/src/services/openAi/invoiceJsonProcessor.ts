@@ -2,7 +2,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { client } from "../../utils/constants";
 import { InvoiceData, InvoiceDataType } from "./invoiceJsonSchema";
 
-export async function parseOcrText(ocrText: string, clientName: string, isVatPayer: boolean): Promise<InvoiceDataType> { // TODO: CHANGE THE PROMPT TO ENSURE THAT CLIENTNAME AND ISVATPAYER ARE USED IN THE PROMPT
+export async function parseOcrText(ocrText: string, clientName: string): Promise<InvoiceDataType> { // TODO: CHANGE THE PROMPT TO ENSURE THAT CLIENTNAME AND ISVATPAYER ARE USED IN THE PROMPT
   const completion = await client.beta.chat.completions.parse({
     model: "gpt-4o-2024-08-06",
     messages: [
@@ -40,6 +40,9 @@ Make sure to select the most appropriate "Dekret" type based on the provided OCR
    - 'podst' // stawka podstawowa - stawka 23%
 
 Make sure to select the most appropriate "Stawka" type based on the provided OCR text.
+
+You are also provided with the client name, for whom you should process the invoice data: ${clientName}.
+The client is in my tax program, so you know, who is the seller and a buyer in my invoice. 
 
 
 `,

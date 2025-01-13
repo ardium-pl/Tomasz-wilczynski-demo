@@ -15,7 +15,6 @@ async function processSingleFile(
   file: drive_v3.Schema$File,
   allInvoiceData: InvoiceDataType[],
   clientName: string,
-  isVatPayer: boolean
 ): Promise<void> {
   if (!file || !file.name || !file.id) {
     logger.warn(`Skipping file due to missing name or ID: ${JSON.stringify(file)}`);
@@ -32,7 +31,7 @@ async function processSingleFile(
     logger.info(`📄 OCR Extracted Text: ${ocrDataText}`);
 
     logger.info(`🧩 Parsing OCR text into JSON schema: ${file.name}`);
-    const parsedData = await parseOcrText(ocrDataText, clientName, isVatPayer);
+    const parsedData = await parseOcrText(ocrDataText, clientName);
     logger.info('📦 Parsed JSON Schema: ', parsedData);
 
     allInvoiceData.push(parsedData);
@@ -55,11 +54,11 @@ export async function main(clientName: string, isVatPayer: boolean): Promise<str
     }
 
     logger.info(`Found ${files.length} file(s) to process.`);
-    await Promise.all(files.map(file => processSingleFile(file, allInvoiceData, clientName, isVatPayer)));
+    await Promise.all(files.map(file => processSingleFile(file, allInvoiceData, clientName)));
 
     if (allInvoiceData.length > 0) {
       logger.info('🔧 Converting all parsed data to XML...');
-      const processedXmlData = xmlService.processDataToXml(allInvoiceData);
+      const processedXmlData = xmlService.processDataToXml(allInvoiceData, isVatPayer);
       const xmlString = xmlService.convertPaczkaToXml(processedXmlData);
 
       const finalFileName = `combined_invoices.xml`;
