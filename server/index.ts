@@ -2,8 +2,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
-import { invoiceProcessorRouter } from "../api/routers.js";
-import { logger } from "./utils/logger.js";
+import { invoiceProcessorRouter } from "./api/routers.js";
+import { logger } from "./src/utils/logger.js";
 import { clientRouter } from "./client.js";
 
 const app = express();
