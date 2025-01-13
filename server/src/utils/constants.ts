@@ -1,11 +1,13 @@
 import { google,  } from "googleapis";
 import OpenAI from "openai";
 import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
 // without the any type, the code is bitching, idk why
 export const auth:any = new google.auth.JWT({
   email: process.env.GOOGLE_CLIENT_EMAIL as string,
-  key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(/\\n/g, "\n"),
+  key: (process.env.GOOGLE_PRIVATE_KEY as string).replace(/\\n/g, "\n") || "",
   scopes: ["https://www.googleapis.com/auth/drive"],
   project_id: process.env.GOOGLE_PROJECT_ID as string,
 });
