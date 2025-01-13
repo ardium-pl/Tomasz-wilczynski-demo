@@ -1,46 +1,26 @@
 # Use the full Node.js image instead of slim
 FROM node:18.19.0
 
-# Set the working directory for the backend
-WORKDIR /app/server
+# Set the working directory
+WORKDIR /app
 
-# Copy backend package.json and package-lock.json
-COPY server/package*.json ./
+# Copy the root package.json and lock files
+COPY package.json pnpm-lock.yaml ./
 
-# Install backend dependencies
-RUN npm install --production && \
-    npm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx
+# Install root dependencies
+RUN npm install -g pnpm && pnpm install
 
-# Copy the backend source code
-COPY server ./
+# Copy the entire project directory
+COPY . .
 
 # Install poppler-utils for PDF processing
 RUN apt-get update && apt-get install -y poppler-utils
 
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Set the working directory for the frontend
-WORKDIR /app/client
-
-# Copy frontend package.json and pnpm-lock.yaml
-COPY client/package*.json ./ 
-COPY client/pnpm-lock.yaml ./
-
-# Install frontend dependencies using pnpm
-RUN pnpm install
-
-# Copy the frontend source code
-COPY client ./
-
-# Build the Angular application
-RUN npm run build
-
-# Move back to the root working directory to start the app
-WORKDIR /app
+# Build the application
+RUN pnpm run build
 
 # Expose the necessary ports
 EXPOSE 8080 
 
-# Set up the startup command to run both the backend and serve the frontend
-CMD ["sh", "-c", "npm run start"]
+# Set up the startup command
+CMD ["pnpm", "start"]
