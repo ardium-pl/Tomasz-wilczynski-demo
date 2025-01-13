@@ -8,9 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": false,
+    "declaration": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

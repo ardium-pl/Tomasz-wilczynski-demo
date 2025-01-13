@@ -1,6 +1,6 @@
 import { zodResponseFormat } from "openai/helpers/zod";
-import { client } from "../../utils/constants.ts";
-import { InvoiceData, InvoiceDataType } from "./invoiceJsonSchema.ts";
+import { client } from "../../utils/constants";
+import { InvoiceData, InvoiceDataType } from "./invoiceJsonSchema";
 
 export async function parseOcrText(ocrText: string, clientName: string, isVatPayer: boolean): Promise<InvoiceDataType> { // TODO: CHANGE THE PROMPT TO ENSURE THAT CLIENTNAME AND ISVATPAYER ARE USED IN THE PROMPT
   const completion = await client.beta.chat.completions.parse({

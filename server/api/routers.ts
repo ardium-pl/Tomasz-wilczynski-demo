@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
-import { logger } from '../src/utils/logger';
+import { logger } from '../src/utils/logger.js';
 import { main } from './main';
 import { InvoiceProcessorResponse } from '../src/utils/types';
 
-export const invoiceProcessorRouter = express.Router();
+export const invoiceProcessorRouter: any = express.Router();
 
 
 invoiceProcessorRouter.post('/api/invoice-processor', async (req: Request, res: Response<InvoiceProcessorResponse>): Promise<void> => {

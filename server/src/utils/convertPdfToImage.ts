@@ -1,8 +1,8 @@
 import { Poppler } from "node-poppler";
 import path from "path";
 import fs from "fs-extra";
-import { replacePolishCharacters } from "./replacePolishCharacters.ts";
-import {logger} from "./logger.ts";
+import { replacePolishCharacters } from "./replacePolishCharacters";
+import {logger} from "./logger";
 import camelcase from "camelcase";
 
 export async function convertPdfToImages(pdfFilePath: string, saveFolder: string) {

@@ -1,13 +1,13 @@
 import 'dotenv/config';
 import { drive_v3 } from 'googleapis';
-import { GoogleDriveService } from '../src/services/drive/google-api.ts';
-import { pdfOCR } from '../src/services/ocr/ocr.ts';
-import { parseOcrText } from '../src/services/openAi/invoiceJsonProcessor.ts';
-import { InvoiceDataType } from '../src/services/openAi/invoiceJsonSchema.ts';
-import { XmlService } from '../src/services/xml/xmlProcessor.ts';
-import { inputPdfFolder, PDF_FOLDER_ID, XML_FOLDER_ID } from '../src/utils/constants.ts';
-import { downloadFile } from '../src/utils/downloadFile.ts';
-import { logger } from '../src/utils/logger.ts';
+import { GoogleDriveService } from '../src/services/drive/google-api';
+import { pdfOCR } from '../src/services/ocr/ocr';
+import { parseOcrText } from '../src/services/openAi/invoiceJsonProcessor';
+import { InvoiceDataType } from '../src/services/openAi/invoiceJsonSchema';
+import { XmlService } from '../src/services/xml/xmlProcessor';
+import { inputPdfFolder, PDF_FOLDER_ID, XML_FOLDER_ID } from '../src/utils/constants';
+import { downloadFile } from '../src/utils/downloadFile';
+import { logger } from '../src/utils/logger';
 
 const googleDrive = new GoogleDriveService();
 

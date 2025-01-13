@@ -40,7 +40,7 @@ RUN npm run build
 WORKDIR /app
 
 # Expose the necessary ports
-EXPOSE 8080 4200
+EXPOSE 8080 
 
 # Set up the startup command to run both the backend and serve the frontend
 CMD ["sh", "-c", "npx tsx server/index.ts & npx http-server client/dist -p 4200"]
