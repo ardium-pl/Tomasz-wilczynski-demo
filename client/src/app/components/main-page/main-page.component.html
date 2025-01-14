@@ -1,20 +1,25 @@
 <form form="customerData" [formGroup]="customerData">
-    <div class="container">
-      <div class="form-container">
-        <label for="clientNameInput" class="input-label">Nazwa klienta</label>
-        <input id="clientNameInput" formControlName="clientName" placeholder="Wpisz nazwę klienta" class="input-field" />
-        <div class="checkbox-container">
-          <input id="isVatPayerCheckbox" type="checkbox" class="checkbox" formControlName="isVatPayer" />
-          <label for="isVatPayerCheckbox" class="checkbox-label">Czy jest vatowcem</label>
-        </div>
-        @if (xmlService.isLoading()) {
-          <div class="spinner">
-            <div class="loader"></div>
-          </div>
-        } @else {
-          <button (click)="generateXml()" class="submit-button">Generuj XML</button>
-        }
+  <div class="container">
+    <div class="form-container">
+      <label for="clientNameInput" class="input-label">Nazwa klienta</label>
+      <input id="clientNameInput" formControlName="clientName" placeholder="Wpisz nazwę klienta" class="input-field" />
+      <div class="checkbox-container">
+        <input id="isVatPayerCheckbox" type="checkbox" class="checkbox" formControlName="isVatPayer" />
+        <label for="isVatPayerCheckbox" class="checkbox-label">Czy jest vatowcem</label>
       </div>
+      @if (xmlService.isLoading()) {
+        <div class="spinner">
+          <div class="loader"></div>
+        </div>
+      } @else {
+        <button
+          (click)="generateXml()"
+          class="submit-button"
+          [disabled]="customerData.invalid || !customerData.value.clientName"
+        >
+          Generuj XML
+        </button>
+      }
     </div>
-  </form>
-  
+  </div>
+</form>

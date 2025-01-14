@@ -73,6 +73,7 @@
   }
   
   .submit-button:disabled {
+    opacity: 50%;
     background-color: #ddd;
     cursor: not-allowed;
     color: #666;
