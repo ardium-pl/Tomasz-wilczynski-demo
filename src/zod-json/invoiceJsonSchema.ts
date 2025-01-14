@@ -26,4 +26,16 @@ export const InvoiceData = z.object({
 export type InvoiceData = z.infer<typeof InvoiceData>;
 type Product = z.infer<typeof Product>;
 
+export const CmrData = z.object({
+    sender: z.string(),
+    reciever: z.string(),
+    carRegistrationNumber: z.string(),
+    destination: z.string(),
+    loadingPlace: z.string(),
+    weight: z.number(),
+    issueDate: z.string(),
+    recievedDate: z.string()
+})
 
+
+export type CmrData = z.infer<typeof CmrData>;

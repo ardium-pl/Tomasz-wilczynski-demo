@@ -5,6 +5,10 @@ import path from "path";
 import { convertPdfToImages } from "../../src/utils/convertPdfToImage";
 import { deleteFile } from "../../src/utils/deleteFile";
 import { logger } from "../../src/utils/logger";
+import { error } from "winston";
+import { blockchainnodeengine_v1 } from "googleapis";
+import { google } from '@google-cloud/vision/build/protos/protos';
+
 
 dotenv.config();
 
@@ -46,6 +50,8 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
       logger.error("No images were generated from the PDF");
       return "";
     }
+
+    //The Google Vision API starts here 
 
     const ocrResults = await Promise.all(
       imageFilePaths.map(async (imageFilePath): Promise<string> => {
@@ -107,6 +113,37 @@ export async function fileOcr(
   logger.info(` 🕶️ Processing image with Google Vision: ${imageFilePath}`);
   try {
     const [result] = await client.documentTextDetection(imageFilePath);
+
+    //THIS IS A TEST SPACE FOR CMR
+
+    const document = result.fullTextAnnotation;
+    const page = document?.pages?.[0];
+    page?.blocks?.length ?? (() => { throw new Error('loop length not found'); })();
+    
+    const blocksArray:  google.cloud.vision.v1.IBlock []= [];
+
+    page.blocks.forEach((block) => {
+      blocksArray.push(block)
+    })
+
+    //Writing the res into a file:
+    const outputDir = '/test_pdf_maps';
+    
+    // Ensure the output directory exists
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+        
+    const fileContent = JSON.stringify(blocksArray, null, 2);
+    
+    await _saveDataToTxt(
+      "./output-text",
+      'all_blocks',
+      fileContent
+    );
+
+
+    //END OF TEST SPACE FOR CMR
 
     const googleVisionText = result.fullTextAnnotation?.text;
 

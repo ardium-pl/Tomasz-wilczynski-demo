@@ -128,3 +128,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+#cmr test files
+029_09_2024_CMR_IT_C*
+all_blocks.json
+base_image.png
+output_visualization.png
