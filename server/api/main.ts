@@ -1,13 +1,14 @@
 import 'dotenv/config';
 import { drive_v3 } from 'googleapis';
 import { GoogleDriveService } from '../src/services/drive/google-api';
-import { pdfOCR } from '../src/services/ocr/ocr';
+import { pdfOCR, fileOcr } from '../src/services/ocr/ocr';
 import { parseOcrText } from '../src/services/openAi/invoiceJsonProcessor';
 import { InvoiceDataType } from '../src/services/openAi/invoiceJsonSchema';
 import { XmlService } from '../src/services/xml/xmlProcessor';
-import { inputPdfFolder, PDF_FOLDER_ID, XML_FOLDER_ID } from '../src/utils/constants';
+import { inputPdfFolder, PDF_FOLDER_ID } from '../src/utils/constants';
 import { downloadFile } from '../src/utils/downloadFile';
 import { logger } from '../src/utils/logger';
+import path from 'path';
 
 const googleDrive = new GoogleDriveService();
 
@@ -23,11 +24,25 @@ async function processSingleFile(
 
   try {
     logger.info(`🧾 Downloading PDF: ${file.name}`);
-    const pdfFilePath = await downloadFile(file.id, inputPdfFolder, file.name);
-    logger.info(`🧾 PDF downloaded to: ${pdfFilePath}`);
+    const filePath = await downloadFile(file.id, inputPdfFolder, file.name);
 
-    logger.info(`🔍 Performing OCR on PDF: ${file.name}`);
-    const ocrDataText = await pdfOCR(pdfFilePath);
+    const ocrFunctionMap: Record<string, (filePath: string) => Promise<string>> = {
+      pdf: pdfOCR,
+      jpg: fileOcr,
+      jpeg: fileOcr,
+      png: fileOcr,
+    };
+
+    // Detect file extension
+    const fileExtension = path.extname(file.name).toLowerCase().slice(1);
+
+    if (!ocrFunctionMap[fileExtension]) {
+      logger.warn(`Skipping unsupported file type: ${file.name}`);
+      return;
+    }
+
+    logger.info(`🔍 Performing OCR on file: ${file.name}`);
+    const ocrDataText = await ocrFunctionMap[fileExtension](filePath);
     logger.info(`📄 OCR Extracted Text: ${ocrDataText}`);
 
     logger.info(`🧩 Parsing OCR text into JSON schema: ${file.name}`);
