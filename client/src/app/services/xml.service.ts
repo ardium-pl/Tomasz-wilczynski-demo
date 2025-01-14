@@ -11,6 +11,7 @@ import { HttpService } from './http.service';
 export class XmlService {
   private readonly http = inject(HttpService);
   public readonly isLoading = signal<boolean>(false);
+  public readonly errorMessage = signal<string | null>(null);
   private readonly fileSystemService = inject(FileSystemService);
 
   private generateXML(xmlString: string, clientName: string): void {
@@ -24,6 +25,7 @@ export class XmlService {
 
   public async sendCustomerData(clientName: string, isVatPayer: boolean): Promise<void> {
     this.isLoading.set(true);
+    this.errorMessage.set(null);
     this.http
       .post<{ clientName: string; isVatPayer: boolean }, InvoiceProcessorResponse>('/invoice-processor', {
         clientName: clientName,
@@ -41,6 +43,7 @@ export class XmlService {
         error: err => {
           console.log('❌ Error performing the http request, error message:', err);
           this.isLoading.set(false);
+          this.errorMessage.set('Wystąpił błąd podczas generowania pliku XML. Spróbuj ponownie lub skontaktuj się z administratorem.');
         },
       });
   }

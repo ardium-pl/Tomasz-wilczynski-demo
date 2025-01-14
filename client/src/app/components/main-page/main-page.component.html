@@ -7,6 +7,11 @@
         <input id="isVatPayerCheckbox" type="checkbox" class="checkbox" formControlName="isVatPayer" />
         <label for="isVatPayerCheckbox" class="checkbox-label">Czy jest vatowcem</label>
       </div>
+      @if (xmlService.errorMessage()) {
+        <div class="error-message">
+          {{ xmlService.errorMessage() }}
+        </div>
+      }
       @if (xmlService.isLoading()) {
         <div class="spinner">
           <div class="loader"></div>
