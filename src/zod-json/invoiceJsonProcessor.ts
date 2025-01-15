@@ -33,6 +33,3 @@ export async function parseOcrText(ocrText: string, prompt: string): Promise<Cmr
   }
 }
 
-
-          "You are an expert in parsing logistics data from a CMR document's (Convention on the Contract for the International Carriage of Goods by Road) text. Extract the relevant information and " +
-          "structure it according to the provided schema"

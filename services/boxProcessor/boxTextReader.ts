@@ -21,14 +21,17 @@ export class BoxProcessor {
     box.paragraphs.forEach((paragraph) => {
       paragraph.words.forEach((word) => {
         word.symbols.forEach((symbol) => {
-          text += symbol.text;
+          // Check confidence and extract only if confidence >= 0.4
+          // if (symbol.confidence === undefined || symbol.confidence >= 0.4) {
+            text += symbol.text;
 
-          // Add spaces or line breaks based on detected breaks
-          if (symbol.property?.detectedBreak?.type === "SPACE") {
-            text += " ";
-          } else if (symbol.property?.detectedBreak?.type === "LINE_BREAK") {
-            text += "\n";
-          }
+            // Add spaces or line breaks based on detected breaks
+            if (symbol.property?.detectedBreak?.type === "SPACE") {
+              text += " ";
+            } else if (symbol.property?.detectedBreak?.type === "LINE_BREAK") {
+              text += "\n";
+            }
+          // }
         });
       });
       // Add a line break between paragraphs
