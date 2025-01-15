@@ -1,19 +1,19 @@
 import vision from "@google-cloud/vision";
+import { google } from "@google-cloud/vision/build/protos/protos";
 import dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
 import { convertPdfToImages } from "../../src/utils/convertPdfToImage";
 import { deleteFile } from "../../src/utils/deleteFile";
 import { logger } from "../../src/utils/logger";
-import { error } from "winston";
-import { blockchainnodeengine_v1 } from "googleapis";
-import { google } from '@google-cloud/vision/build/protos/protos';
-
+import { DATA_FOLDER } from "../..";
+import { BoxProcessor } from "../boxProcessor/boxTextReader";
 
 dotenv.config();
 
 type OcrResult = {
   googleVisionText: string;
+  textFromBoxes: string[];
 };
 
 const VISION_AUTH = {
@@ -28,9 +28,9 @@ const VISION_AUTH = {
 };
 
 export async function pdfOCR(pdfFilePath: string): Promise<string> {
-  const inputPdfFolder = "./input-pdf";
-  const imagesFolder = "./images";
-  const outputTextFolder = "./output-text";
+  const inputPdfFolder = path.join(DATA_FOLDER, "input-pdf");
+  const imagesFolder = path.join(DATA_FOLDER, "images");
+  const outputTextFolder = path.join(DATA_FOLDER, "output-text");
   const fileNameWithoutExt = path.basename(pdfFilePath, ".pdf");
 
   await Promise.all(
@@ -51,13 +51,13 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
       return "";
     }
 
-    //The Google Vision API starts here 
+    //The Google Vision API starts here
 
     const ocrResults = await Promise.all(
       imageFilePaths.map(async (imageFilePath): Promise<string> => {
-        const ocrResult = await fileOcr(imageFilePath);
+        const ocrResult = await fileOcr(imageFilePath, fileNameWithoutExt);
         if (ocrResult) {
-          return ocrResult.googleVisionText;
+          return ocrResult.textFromBoxes.join("\n");
         } else {
           logger.warn(`No text found in image: ${imageFilePath}`);
           return "";
@@ -78,10 +78,10 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
     );
 
     // Delete the image files after processing
-    for (const imageFilePath of imageFilePaths) {
-      logger.warn(`Deleting temporary image: ${imageFilePath}`);
-      deleteFile(imageFilePath);
-    }
+    // for (const imageFilePath of imageFilePaths) {
+    //   logger.warn(`Deleting temporary image: ${imageFilePath}`);
+    //   deleteFile(imageFilePath);
+    // }
 
     return concatenatedResults;
   } catch (err: any) {
@@ -106,7 +106,8 @@ async function _saveDataToTxt(
 }
 
 export async function fileOcr(
-  imageFilePath: string
+  imageFilePath: string, 
+  fileName: string
 ): Promise<OcrResult | null> {
   const client = new vision.ImageAnnotatorClient(VISION_AUTH);
 
@@ -118,30 +119,33 @@ export async function fileOcr(
 
     const document = result.fullTextAnnotation;
     const page = document?.pages?.[0];
-    page?.blocks?.length ?? (() => { throw new Error('loop length not found'); })();
-    
-    const blocksArray:  google.cloud.vision.v1.IBlock []= [];
+    page?.blocks?.length ??
+      (() => {
+        throw new Error("loop length not found");
+      })();
+
+    const blocksArray: google.cloud.vision.v1.IBlock[] = [];
 
     page.blocks.forEach((block) => {
-      blocksArray.push(block)
-    })
-
+      blocksArray.push(block);
+    });
+    console.log("All blocks have been processed and added to blocksArray.");
     //Writing the res into a file:
-    const outputDir = '/test_pdf_maps';
-    
-    // Ensure the output directory exists
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-        
-    const fileContent = JSON.stringify(blocksArray, null, 2);
-    
-    await _saveDataToTxt(
-      "./output-text",
-      'all_blocks',
-      fileContent
-    );
+    const outputDir = path.join(DATA_FOLDER, "blocks-jsons");
+    console.log("Resolved output directory path:", outputDir);
 
+    fs.ensureDirSync(outputDir);
+    console.log("Ensured the output directory exists.");
+    const outputFilePath = path.join(outputDir, `${fileName}.json`);
+    console.log("Generated output file path:", outputFilePath);
+    await fs.writeJSON(outputFilePath, blocksArray, { spaces: 2 });
+    console.log("Blocks data has been written to the JSON file successfully:", outputFilePath);
+
+    // Ensure the output directory exists
+    const boxProcessor = new BoxProcessor(outputFilePath);
+    console.log("Initialized BoxProcessor with output file path:", outputFilePath);
+
+    const textFromBoxes = boxProcessor.assignTextFromBoxes();
 
     //END OF TEST SPACE FOR CMR
 
@@ -153,7 +157,7 @@ export async function fileOcr(
     }
 
     logger.info(` 💚 Successfully processed image ${imageFilePath}`);
-    return { googleVisionText };
+    return { googleVisionText, textFromBoxes };
   } catch (err: any) {
     logger.error(`Error during Google Vision OCR processing: ${err.message}`);
     // Instead of throwing an error, we'll just log it and continue

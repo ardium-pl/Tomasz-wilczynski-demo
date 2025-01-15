@@ -1,59 +1,9 @@
 //Ten kod rysuję boxy na obrazu i pokazuję, który tekst jest wykrywany 
 
-import fs from "fs";
 import { createCanvas, loadImage } from "canvas";
-
-type Vertex = {
-  x: number;
-  y: number;
-};
-
-type BoundingBox = {
-  vertices: Vertex[];
-};
-
-type Symbol = {
-  text: string;
-  property?: { detectedBreak?: { type: string } };
-};
-
-type Word = {
-  symbols: Symbol[];
-};
-
-type Paragraph = {
-  words: Word[];
-};
-
-type TextBox = {
-  paragraphs: Paragraph[];
-  boundingBox: BoundingBox;
-};
-
-type OCRResult = TextBox[]; // JSON file structure
-
-function extractTextFromBox(box: TextBox): string {
-  let text = "";
-
-  box.paragraphs.forEach((paragraph) => {
-    paragraph.words.forEach((word) => {
-      word.symbols.forEach((symbol) => {
-        text += symbol.text;
-
-        // Add spaces or line breaks based on detected breaks
-        if (symbol.property?.detectedBreak?.type === "SPACE") {
-          text += " ";
-        } else if (symbol.property?.detectedBreak?.type === "LINE_BREAK") {
-          text += "\n";
-        }
-      });
-    });
-    // Add a line break between paragraphs
-    text += "\n";
-  });
-
-  return text.trim(); // Remove extra line breaks at the end
-}
+import fs from "fs";
+import { OCRResult } from "./types";
+import { BoxProcessor } from "./boxTextReader";
 
 async function visualizeBoxesOnImage(
   jsonPath: string,
@@ -61,6 +11,7 @@ async function visualizeBoxesOnImage(
   outputPath: string
 ): Promise<void> {
   const jsonData: OCRResult = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+  const boxProcessor = new BoxProcessor(jsonPath);
 
   // Load the image
   const image = await loadImage(imagePath);
@@ -86,7 +37,7 @@ async function visualizeBoxesOnImage(
     ctx.stroke();
 
     // Mark the box with a number 
-    const text = extractTextFromBox(box);
+    const text = boxProcessor.extractTextFromBox(box);
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
     const textX = vertices[0].x + 5; // Offset from top-left corner
@@ -111,12 +62,11 @@ async function visualizeBoxesOnImage(
 }
 
 
-// Example usage
-const jsonPath = "./all_blocks.json";
-const imagePath = './base_image.png';
-const outputPath = "./output_visualization.png";
-//printAllBoxes(jsonPath);
+// // Example usage
+// const jsonPath = "./all_blocks.json";
+// const imagePath = './base_image.png';
+// const outputPath = "./output_visualization.png";
 
-visualizeBoxesOnImage(jsonPath, imagePath, outputPath).catch((err) =>
-    console.error(err)
-  );
+// visualizeBoxesOnImage(jsonPath, imagePath, outputPath).catch((err) =>
+//     console.error(err)
+//   );

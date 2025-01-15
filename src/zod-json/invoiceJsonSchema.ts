@@ -38,4 +38,4 @@ export const CmrData = z.object({
 })
 
 
-export type CmrData = z.infer<typeof CmrData>;
+export type CmrDataType = z.infer<typeof CmrData>;
