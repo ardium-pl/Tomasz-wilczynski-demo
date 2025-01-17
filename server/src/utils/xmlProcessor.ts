@@ -17,3 +17,8 @@ export function getVatPercentage(vatRate: StawkaType): number {
 
   return vatMapping[vatRate] || 0;
 }
+
+export async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+

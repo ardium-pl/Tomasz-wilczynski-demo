@@ -1,4 +1,4 @@
-<form form="customerData" [formGroup]="customerData">
+<form [formGroup]="customerData">
   <div class="container">
     <div class="form-container">
       <label for="clientNameInput" class="input-label">Nazwa klienta</label>
@@ -7,15 +7,19 @@
         <input id="isVatPayerCheckbox" type="checkbox" class="checkbox" formControlName="isVatPayer" />
         <label for="isVatPayerCheckbox" class="checkbox-label">Czy jest vatowcem</label>
       </div>
+
       @if (xmlService.errorMessage()) {
-        <div class="error-message">
-          {{ xmlService.errorMessage() }}
-        </div>
+        <div class="error-message">{{ xmlService.errorMessage() }}</div>
       }
+
       @if (xmlService.isLoading()) {
         <div class="spinner">
           <div class="loader"></div>
         </div>
+        <p>Przetworzono {{ xmlService.processedCount() }} z {{ xmlService.totalFiles() }} plików.</p>
+        <p *ngIf="xmlService.totalFiles() > 0">
+          Aktualnie przetwarzany plik: <strong>{{ xmlService.processedCount() }} / {{ xmlService.totalFiles() }}</strong>
+        </p>
       } @else {
         <button
           (click)="generateXml()"

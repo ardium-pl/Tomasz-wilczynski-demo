@@ -43,4 +43,7 @@ export class HttpService {
     url = environment.apiUrl + url.replace(/^\//, '');
     return this._http.options<R>(url, options as any) as Observable<R>;
   }
+  createUrl(url: string): string {
+    return environment.apiUrl + url.replace(/^\//, '');
+  }
 }

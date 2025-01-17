@@ -12,7 +12,7 @@ import path from 'path';
 
 const googleDrive = new GoogleDriveService();
 
-async function processSingleFile(
+export async function processSingleFile(
   file: drive_v3.Schema$File,
   allInvoiceData: InvoiceDataType[],
   clientName: string,

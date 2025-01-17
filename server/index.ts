@@ -13,8 +13,8 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use(clientRouter);
 app.use(invoiceProcessorRouter);
+// app.use(clientRouter);
 
 app.listen(port, () => {
   logger.info(`Server is running on http://localhost:${port}`);
