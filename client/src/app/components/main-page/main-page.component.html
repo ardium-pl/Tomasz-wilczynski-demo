@@ -17,9 +17,6 @@
           <div class="loader"></div>
         </div>
         <p>Przetworzono {{ xmlService.processedCount() }} z {{ xmlService.totalFiles() }} plików.</p>
-        <p *ngIf="xmlService.totalFiles() > 0">
-          Aktualnie przetwarzany plik: <strong>{{ xmlService.processedCount() }} / {{ xmlService.totalFiles() }}</strong>
-        </p>
       } @else {
         <button
           (click)="generateXml()"
