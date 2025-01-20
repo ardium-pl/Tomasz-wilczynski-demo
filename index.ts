@@ -26,7 +26,7 @@ app.use(cors());
 
 const driveWatch = new GoogleDriveService();
 const sql = new MySqlService();
-let sqlWatchData: WatchDrive | null = await driveWatch.getWatchDriveData();
+let sqlWatchData: WatchDrive | null = await driveWatch.watchDriveChanges();
 
 if (!sqlWatchData || !sqlWatchData.expiration || sqlWatchData.expiration < Date.now()) {
   logger.info("Channel expired or missing. Setting up a new watch channel...");
@@ -297,5 +297,4 @@ async function main(): Promise<void> {
 logger.info(`Starting server...`);
 app.listen(PORT, async () => {
   logger.info(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
-  await googleDrive.watchDriveChanges();
 });
