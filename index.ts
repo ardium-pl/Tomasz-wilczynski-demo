@@ -216,7 +216,7 @@ async function handleDriveChangeNotification() {
         logger.info(
           "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
         );
-        // await main();
+         await main();
         break;
       } else {
         logger.info(
@@ -329,6 +329,6 @@ app.listen(PORT, async () => {
       } catch (error) {
         logger.error("Error during periodic channel expiry check:", error);
       }
-    }, 60 * 1000); // Check every hour
+    }, 10 * 1000); // Check every h10 seconds
     
 });
