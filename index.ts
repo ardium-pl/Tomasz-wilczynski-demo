@@ -297,4 +297,38 @@ async function main(): Promise<void> {
 logger.info(`Starting server...`);
 app.listen(PORT, async () => {
   logger.info(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
+
+    // Initial Channel Setup
+    if (!sqlWatchData || !sqlWatchData.expiration || sqlWatchData.expiration < Date.now()) {
+      logger.info("Channel expired or missing. Setting up a new watch channel...");
+      sqlWatchData = await driveWatch.watchDriveChanges();
+  
+      if (!sqlWatchData) {
+        throw new Error("Failed to set up Drive watch channel. Exiting...");
+      }
+    }
+  
+    savedPageToken = sqlWatchData.savedPageToken;
+  
+    // Periodic Channel Expiry Check
+    setInterval(async () => {
+      try {
+        if (sqlWatchData && sqlWatchData.expiration && sqlWatchData.expiration < Date.now()) {
+          logger.info("Drive watch channel expired. Reinitializing...");
+          
+          // Reinitialize the watch channel
+          const newWatchData = await driveWatch.watchDriveChanges();
+          if (newWatchData) {
+            sqlWatchData = newWatchData;
+            savedPageToken = newWatchData.savedPageToken;
+            logger.info("Drive watch channel reinitialized successfully.");
+          } else {
+            logger.error("Failed to reinitialize Drive watch channel.");
+          }
+        }
+      } catch (error) {
+        logger.error("Error during periodic channel expiry check:", error);
+      }
+    }, 60 * 1000); // Check every hour
+    
 });
