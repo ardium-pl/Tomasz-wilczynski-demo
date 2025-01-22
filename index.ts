@@ -165,33 +165,25 @@ async function main(): Promise<void> {
 
   try {
     const files = await googleDrive.listAllFiles(PDF_FOLDER_ID);
-
-    if (files.length === 0) {
+    if (!files || files.length === 0) {
       logger.info("No files found to process.");
       return;
     }
 
-    logger.info(`Found ${files.length} file(s) to process.`);
     await Promise.all(
       files.map((file) => processSingleFile(file, allInvoiceData))
     );
 
     if (allInvoiceData.length > 0) {
-      logger.info("🔧 Converting all parsed data to XML...");
       const processedXmlData = xmlService.processDataToXml(allInvoiceData);
       const xmlString = xmlService.convertPaczkaToXml(processedXmlData);
 
       const finalFileName = `combined_invoices.xml`;
-      logger.info(`💾 Saving combined XML to file system: ${finalFileName}`);
       const xmlFilePath = xmlService.saveXmlToFile(xmlString, finalFileName);
 
-      logger.info(
-        `☁️ Uploading combined XML file (${finalFileName}) to Google Drive`
-      );
+
       await googleDrive.uploadFile(XML_FOLDER_ID, finalFileName, xmlFilePath);
       logger.info(`✅ Combined XML file uploaded successfully.`);
-    } else {
-      logger.info("No valid invoice data to process into XML.");
     }
   } catch (err: any) {
     logger.error(
@@ -204,7 +196,9 @@ async function main(): Promise<void> {
 logger.info(`Starting server...`);
 
 app.listen(PORT, async () => {
-  logger.info(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
+  logger.info(`Running on port: ${PORT}! `);
+
+  logger.info(sqlWatchData);
 
     // Initial Channel Setup
     if (!sqlWatchData || !sqlWatchData.expiration || sqlWatchData.expiration < Date.now()) {
