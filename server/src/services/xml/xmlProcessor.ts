@@ -22,9 +22,9 @@ export class XmlService {
           data_wystawienia: item.documentDate,
           numer: item.invoiceNumber,
           kontrahent: {
-            NIP: item.sellerNip,
-            nazwa: item.sellerName,
-            adres: item.address,
+            NIP: item.clientNip,
+            nazwa: item.clientName,
+            adres: item.clientAddress,
           },
           ksieguj: {
             kwota: item.invoiceNettoValue.toFixed(2),

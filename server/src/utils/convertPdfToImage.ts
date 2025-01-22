@@ -42,6 +42,8 @@ export async function convertPdfToImages(pdfFilePath: string, saveFolder: string
         };
 
         logger.info(`Converting PDF to images with options: ${JSON.stringify(options)}`);
+        logger.info(`Saving images to: ${outputFilePath}`);
+
         await poppler.pdfToCairo(pdfFilePath, outputFilePath, options);
 
         const imagePaths = [];

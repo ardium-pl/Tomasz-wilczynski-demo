@@ -43,11 +43,17 @@ async function processSingleFile(
 
     logger.info(`🔍 Performing OCR on file: ${file.name}`);
     const ocrDataText = await ocrFunctionMap[fileExtension](filePath);
+
+    if(!ocrDataText) {
+      logger.warn(`No text detected in file: ${file.name}`);
+      return;
+    }
+
     logger.info(`📄 OCR Extracted Text: ${ocrDataText}`);
 
     logger.info(`🧩 Parsing OCR text into JSON schema: ${file.name}`);
     const parsedData = await parseOcrText(ocrDataText, clientName);
-    logger.info('📦 Parsed JSON Schema: ', parsedData);
+    logger.info(`📦 Parsed JSON Schema for file : ${file.name}`, parsedData);
 
     allInvoiceData.push(parsedData);
   } catch (err: any) {
@@ -81,7 +87,7 @@ export async function main(clientName: string, isVatPayer: boolean): Promise<str
 
       return xmlString;
     } else {
-      logger.info('No valid invoice data to process into XML.');
+      logger.warn('No valid invoice data to process into XML.');
       return null;
     }
   } catch (err: any) {

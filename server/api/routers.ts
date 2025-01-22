@@ -23,8 +23,15 @@ invoiceProcessorRouter.post('/api/invoice-processor', async (req: Request, res: 
 
     // Pass the body to the main function (modify main to accept these parameters if needed)
     const xmlString = await main(clientName, isVatPayer);
-    
-    if(!xmlString) return;
+
+    if (!xmlString) {
+      res.status(500).json({
+        status: 'error',
+        message: 'No data could be extracted from the provided files.',
+        xmlString: 'No data could be extracted from the provided files.',
+      });
+      return;
+    }
 
     res.status(200).json({
       status: 'success',
