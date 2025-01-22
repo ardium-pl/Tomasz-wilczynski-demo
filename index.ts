@@ -45,45 +45,12 @@ const pendingChanges = new Set<string>();
 app.post("/drive/webhook", async (req, res) => {
   const channelId = req.header("X-Goog-Channel-Id");
   const resourceState = req.header("X-Goog-Resource-State");
-  const resourceId = req.header("X-Goog-Resource-Id");
-  const messageNumber = req.header("X-Goog-Message-Number");
-
-  logger.info("Received Drive webhook notification:", {
-    channelId,
-    resourceState,
-    resourceId,
-    messageNumber,
-  });
-
   res.sendStatus(200);
 
   if (resourceState === "change" && channelId === sqlWatchData?.channelId) {
     try {
       logger.info("File change detected, adding to pending changes.");
-      pendingChanges.add(PDF_FOLDER_ID);
-
-      if (!debounceTimer) {
-        logger.info("Starting debounce timer...");
-        debounceTimer = setTimeout(async () => {
-          debounceTimer = null;
-
-          try {
-            if (pendingChanges.size > 0) {
-              logger.info(
-                "Changes detected, processing all pending notifications..."
-              );
-              await handleDriveChangeNotification();
-              pendingChanges.clear(); 
-            } else {
-              logger.info("No relevant changes detected.");
-            }
-          } catch (err) {
-            logger.error("Error during debounced processing:", err);
-          }
-        }, DEBOUNCE_MS);
-      } else {
-        logger.info("Debounce timer already running; additional changes added.");
-      }
+      await handleDriveChangeNotification();
     } catch (err) {
       logger.error("Error handling Drive change:", err);
     }
@@ -157,98 +124,38 @@ const updateStartPageTokenInDB = async (
 };
 
 async function handleDriveChangeNotification() {
-  logger.info("[handleDriveChangeNotification] Entered function.");
-
   const drive = googleDrive.drive;
-  logger.info("[handleDriveChangeNotification] Drive client initialized.");
 
-  logger.info(
-    "[handleDriveChangeNotification] Checking savedPageToken:",
-    savedPageToken
-  );
   if (!savedPageToken) {
-    logger.info(
-      "[handleDriveChangeNotification] No savedPageToken found. Fetching fresh token..."
-    );
     const { data } = await drive.changes.getStartPageToken();
-    if (!data.startPageToken) {
-      logger.error(
-        "[handleDriveChangeNotification] No startPageToken found; cannot process changes."
-      );
-      return;
-    }
-    savedPageToken = data.startPageToken;
-    logger.info(
-      "[handleDriveChangeNotification] Fetched new startPageToken:",
-      savedPageToken
-    );
+    savedPageToken = data.startPageToken ?? savedPageToken;
   }
-
-  logger.info(
-    "[handleDriveChangeNotification] Listing changes with pageToken:" + 
-    savedPageToken
-  );
+  
   const res = await drive.changes.list({
     pageToken: savedPageToken,
     fields: "*",
   });
 
-  logger.info(
-    "[handleDriveChangeNotification] changes.list response:",
-  );
-
   if (res.data.changes) {
-    logger.info(
-      `[handleDriveChangeNotification] Found ${res.data.changes.length} change(s).`
-    );
     for (const change of res.data.changes) {
-      logger.info(`[handleDriveChangeNotification] Processing change:`, change);
-      logger.info(
-        `Folder: ${change.file?.parents}, File: ${change.file?.name}`
-      );
       if (change.file && change.file.parents?.includes(PDF_FOLDER_ID)) {
-        logger.info(
-          "[handleDriveChangeNotification] New file detected in PDF folder:",
-          change.file.name
-        );
-
         // Here you can process the file directly, or run your 'main' logic:
-        logger.info(
-          "[handleDriveChangeNotification] Calling main() to re-process the PDF folder."
-        );
-         await main();
+        await main();
         break;
-      } else {
-        logger.info(
-          "[handleDriveChangeNotification] Change is not in PDF_FOLDER_ID or file is null. Skipping."
-        );
       }
     }
-  } else {
-    logger.info(
-      "[handleDriveChangeNotification] No changes returned from the Drive changes list."
-    );
   }
 
   const newStartPageToken = res.data.newStartPageToken;
   if (newStartPageToken) {
-    logger.info(
-      "[handleDriveChangeNotification] Updating savedPageToken to:",
-      newStartPageToken
-    );
     try {
       if (!sqlWatchData) return;
-
       await updateStartPageTokenInDB(sqlWatchData.channelId, newStartPageToken);
     } catch (err) {
       console.error("Failed to update startPageToken in the database:", err);
     }
     savedPageToken = newStartPageToken;
   }
-
-  logger.info(
-    "[handleDriveChangeNotification] Completed processing changes.\n"
-  );
 }
 
 async function main(): Promise<void> {
@@ -295,6 +202,7 @@ async function main(): Promise<void> {
 
 // Startup
 logger.info(`Starting server...`);
+
 app.listen(PORT, async () => {
   logger.info(`Running on port ${ansis.greenBright.underline(String(PORT))}!`);
 
@@ -329,6 +237,6 @@ app.listen(PORT, async () => {
       } catch (error) {
         logger.error("Error during periodic channel expiry check:", error);
       }
-    }, 10 * 1000); // Check every h10 seconds
+    }, 60 * 1000); // Check every h10 seconds
     
 });
