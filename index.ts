@@ -198,7 +198,12 @@ logger.info(`Starting server...`);
 app.listen(PORT, async () => {
   logger.info(`Running on port: ${PORT}! `);
 
-  logger.info(sqlWatchData);
+  if(sqlWatchData){
+    logger.info(sqlWatchData.channelId);
+    logger.info(sqlWatchData.resourceId);
+    logger.info(sqlWatchData.savedPageToken);
+    logger.info(sqlWatchData.expiration);
+  }
 
     // Initial Channel Setup
     if (!sqlWatchData || !sqlWatchData.expiration || sqlWatchData.expiration < Date.now()) {
