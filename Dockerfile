@@ -17,7 +17,14 @@ COPY . .
 RUN apt-get update && apt-get install -y poppler-utils
 RUN pnpm install --production &&     pnpm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx
 # Build the application
-RUN pnpm run build
+
+# Use Railway-provided NODE_ENV or default to production
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+# Conditionally run the build command based on the NODE_ENV
+RUN if [ "$NODE_ENV" = "production" ]; then pnpm run build; else pnpm run build:dev; fi
+
 
 # Expose the necessary ports
 EXPOSE 8080 
