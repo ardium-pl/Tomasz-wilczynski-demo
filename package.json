@@ -4,7 +4,7 @@
     "preinstall": "npx only-allow pnpm",
     "start": "cd server && pnpm run start",
     "build": "cd client && pnpm install && pnpm run build && cd ../server && pnpm install",
-    "build:preprod": "cd client && pnpm install && pnpm run build:preprod && cd ../server && pnpm install",
+    "build:dev": "cd client && pnpm install && pnpm run build:dev && cd ../server && pnpm install",
     "watch": "cd client && pnpm run watch",
     "server": "cd server && nodemon",
     "front": "cd client && ng serve",
