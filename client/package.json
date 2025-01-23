@@ -1,0 +1,47 @@
+{
+  "name": "client",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:dev": "ng build --configuration development",
+    "watch": "ng build --watch --configuration local",
+    "test": "ng test",
+    "ngg-page": "ng g c --type=page",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^18.2.8",
+    "@angular/common": "^18.2.8",
+    "@angular/compiler": "^18.2.8",
+    "@angular/core": "^18.2.8",
+    "@angular/forms": "^18.2.8",
+    "@angular/platform-browser": "^18.2.8",
+    "@angular/platform-browser-dynamic": "^18.2.8",
+    "@angular/router": "^18.2.8",
+    "@ardium-ui/devkit": "^2.8.0",
+    "file-saver": "^2.0.5",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "xml-js": "^1.6.11",
+    "xml2js": "^0.6.2",
+    "zone.js": "~0.14.10"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^18.2.3",
+    "@angular/cli": "^18.2.3",
+    "@angular/compiler-cli": "^18.2.8",
+    "@types/file-saver": "^2.0.7",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.2.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "only-allow": "^1.2.1",
+    "typescript": "~5.5.2"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "app",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "start": "cd server && pnpm run start",
+    "build": "cd client && pnpm install && pnpm run build && cd ../server && pnpm install",
+    "build:dev": "cd client && pnpm install && pnpm run build:dev && cd ../server && pnpm install",
+    "watch": "cd client && pnpm run watch",
+    "server": "cd server && nodemon",
+    "front": "cd client && ng serve",
+    "prettier": "prettier --write .",
+    "install-all": "pnpm i && cd server && pnpm i && cd ../client && pnpm i && cd ../"
+    
+  },
+  "devDependencies": {
+    "only-allow": "^1.2.1",
+    "pnpm": "^9.12.1",
+    "prettier": "^3.3.3"
+  }
+}
