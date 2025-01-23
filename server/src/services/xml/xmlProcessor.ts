@@ -22,12 +22,10 @@ export class XmlService {
           data_wystawienia: item.documentDate,
           numer: item.invoiceNumber,
           kontrahent: {
-            NIP: item.clientNip,
-            nazwa: item.clientName,
-            adres: item.clientAddress,
+            NIP: item.oppositeNip,
           },
           ksieguj: {
-            kwota: item.invoiceNettoValue.toFixed(2),
+            kwota: isVatPayer ? item.invoiceNettoValue.toFixed(2) : item.invoiceBruttoValue.toFixed(2),
           },
           konto: item.bankAccount.replace(/\s+/g, ""),
           $: {

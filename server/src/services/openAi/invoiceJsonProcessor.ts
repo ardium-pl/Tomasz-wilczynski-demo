@@ -64,7 +64,7 @@ Follow these rules:
 
 6. If vatRate is zero (zw or NP), always set the vatValue to 0.00, and ensure that the invoiceNettoValue and invoiceBruttoValue are identical.
 
-7. Ensure that the full address of the client is included, but exclude the clientName in that field. clientName should be only in clientName field.
+7. Ensure that the full address of the seller is included, but exclude the opposite in that field. opposite should be only in opposite field.
 
 8. If the bank account number is present on the invoice, ensure it contains exactly 26 digits. If the number does not have 26 digits, it is not a valid bankAccount, and you should skip it.
 
@@ -73,21 +73,22 @@ Follow these rules:
 10. Avoid generating or including fragments such as "\n" in the values of any field. Clean and normalize the text before assigning it to the schema.
 
 11. Ensure the following fields refer specifically to the client listed on the invoice:
-   - clientNip: The tax identification number of the client.
-   - clientAddress: The full address of the client.
-   - clientName: The name of the client taken from the invoice.`,
-      },
-      { role: "user", content: ocrText },
-    ],
-    response_format: zodResponseFormat(InvoiceData, "invoiceData"),
-  });
+   - oppositeNip: The tax identification of the seller.
+   - oppositeAddress: The full address of the client.
+   - oppositeName: The name of the client taken from the invoice
+12. While assigning oppositeData please be sure to always assign opposite data to the clientName!!. Sometimes clientName can be a seller, than assign to the oppositeName the opposite data. Just ensure that the oppositeName is not the same as the clientName.`
+  },
+  { role: "user", content: ocrText },
+],
+response_format: zodResponseFormat(InvoiceData, "invoiceData"),
+});
 
-  const message = completion.choices[0]?.message;
-  if (message?.parsed) {
-    return message.parsed;
-  } else if (message?.refusal) {
-    throw new Error(` 🤖 AI refused to process the text: ${message.refusal}`);
-  } else {
-    throw new Error("Failed to parse OCR text");
-  }
+const message = completion.choices[0]?.message;
+if (message?.parsed) {
+  return message.parsed;
+} else if (message?.refusal) {
+  throw new Error(` 🤖 AI refused to process the text: ${message.refusal}`);
+} else {
+  throw new Error("Failed to parse OCR text");
+}
 }
