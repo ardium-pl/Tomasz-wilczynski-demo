@@ -2,5 +2,5 @@ import { Environment } from './types';
 
 export const environment: Environment = {
   production: false,
-  apiUrl: 'http://ocr-ekspert-podatkowy-dev.up.railway.app/api/',
+  apiUrl: 'https://ocr-ekspert-podatkowy-dev.up.railway.app/api/',
 };
