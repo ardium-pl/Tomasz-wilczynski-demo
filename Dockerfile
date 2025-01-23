@@ -17,7 +17,7 @@ COPY . .
 RUN apt-get update && apt-get install -y poppler-utils
 RUN pnpm install --production &&     pnpm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx
 # Build the application
-RUN pnpm run build:dev
+RUN pnpm run build
 
 # Expose the necessary ports
 EXPOSE 8080 
