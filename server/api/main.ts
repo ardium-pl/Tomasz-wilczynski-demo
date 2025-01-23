@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import { drive_v3 } from 'googleapis';
 import { GoogleDriveService } from '../src/services/drive/google-api';
-import { pdfOCR, fileOcr } from '../src/services/ocr/ocr';
+import { pdfOCR, fileOcr, _saveDataToTxt } from '../src/services/ocr/ocr';
 import { parseOcrText } from '../src/services/openAi/invoiceJsonProcessor';
 import { InvoiceDataType } from '../src/services/openAi/invoiceJsonSchema';
 import { XmlService } from '../src/services/xml/xmlProcessor';
-import { inputPdfFolder, PDF_FOLDER_ID } from '../src/utils/constants';
+import { inputPdfFolder, outputTextFolder, PDF_FOLDER_ID } from '../src/utils/constants';
 import { downloadFile } from '../src/utils/downloadFile';
 import { logger } from '../src/utils/logger';
 import path from 'path';
@@ -35,6 +35,7 @@ async function processSingleFile(
 
     // Detect file extension
     const fileExtension = path.extname(file.name).toLowerCase().slice(1);
+    const fileNameWithoutExt = path.basename(file.name, path.extname(file.name));
 
     if (!ocrFunctionMap[fileExtension]) {
       logger.warn(`Skipping unsupported file type: ${file.name}`);
@@ -43,6 +44,7 @@ async function processSingleFile(
 
     logger.info(`🔍 Performing OCR on file: ${file.name}`);
     const ocrDataText = await ocrFunctionMap[fileExtension](filePath);
+    await _saveDataToTxt(outputTextFolder, fileNameWithoutExt, ocrDataText);
 
     if(!ocrDataText) {
       logger.warn(`No text detected in file: ${file.name}`);
@@ -95,3 +97,5 @@ export async function main(clientName: string, isVatPayer: boolean): Promise<str
     return null;
   }
 }
+
+

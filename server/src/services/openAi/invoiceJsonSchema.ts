@@ -31,10 +31,9 @@ const Stawka = z.enum([
 export const InvoiceData = z.object({
   invoiceNumber: z.string(),
   oppositeNip: z.string(),
+  clientsNameNip: z.string(),
   shipDate: z.string(),
   documentDate: z.string(),
-  oppositeAddress: z.string(),
-  oppositeName: z.string(),
   invoiceNettoValue: z.number(),
   invoiceBruttoValue: z.number(),
   bankAccount: z.string(),
