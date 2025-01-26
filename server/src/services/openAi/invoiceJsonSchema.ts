@@ -29,18 +29,7 @@ const Stawka = z.enum([
 
 
 export const InvoiceData = z.object({
-  invoiceNumber: z.string(),
-  clientNip: z.string(),
-  shipDate: z.string(),
-  documentDate: z.string(),
-  clientAddress: z.string(),
-  clientName: z.string(),
-  invoiceNettoValue: z.number(),
-  invoiceBruttoValue: z.number(),
-  bankAccount: z.string(),
-  vatRate: Stawka,
-  decret: Dekret,
-  vatValue: z.number().optional(),
+  drawingName: z.string(),
 });
 
 // Infer the types

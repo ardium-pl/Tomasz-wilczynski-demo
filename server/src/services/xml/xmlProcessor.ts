@@ -8,7 +8,7 @@ import { getVatPercentage } from "../../utils/xmlProcessor";
 
 export class XmlService {
   public processDataToXml(data: InvoiceDataType[], isVatPayer: boolean): Paczka {
-    const firstMonth = data[0]?.documentDate.slice(0, 7) || "unknown";
+    const firstMonth = "unknown";
   
     const paczka: Paczka = {
       $: {
@@ -18,36 +18,22 @@ export class XmlService {
       },
       dokument: data.map((item) => {
         const documentObject: Dokument = {
-          data: item.documentDate,
-          data_wystawienia: item.documentDate,
-          numer: item.invoiceNumber,
-          kontrahent: {
-            NIP: item.clientNip,
-            nazwa: item.clientName,
-            adres: item.clientAddress,
-          },
-          ksieguj: {
-            kwota: item.invoiceNettoValue.toFixed(2),
-          },
-          konto: item.bankAccount.replace(/\s+/g, ""),
-          $: {
-            dekret: item.decret,
-          },
+          data: item.drawingName,
         };
   
-        if (isVatPayer) {
-          documentObject.rejVAT = {
-            suma: [
-              {
-                netto: item.invoiceNettoValue,
-                VAT: item.vatValue,
-                $: {
-                  stawka: item.vatRate,
-                },
-              },
-            ],
-          };
-        }
+        // if (isVatPayer) {
+        //   documentObject.rejVAT = {
+        //     suma: [
+        //       {
+        //         netto: item.invoiceNettoValue,
+        //         VAT: item.vatValue,
+        //         $: {
+        //           stawka: item.vatRate,
+        //         },
+        //       },
+        //     ],
+        //   };
+        // }
   
         return documentObject;
       }),

@@ -69,6 +69,8 @@ export async function main(clientName: string, isVatPayer: boolean): Promise<str
   try {
     const files = await googleDrive.listAllFiles(PDF_FOLDER_ID);
 
+    logger.info(PDF_FOLDER_ID);
+
     if (files.length === 0) {
       logger.info('No files found to process.');
       return null;
