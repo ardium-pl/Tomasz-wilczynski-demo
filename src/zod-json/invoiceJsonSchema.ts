@@ -1,15 +1,24 @@
 import { z } from "zod";
 
-export const CmrData = z.object({
-    sender: z.string(),
-    reciever: z.string(),
-    carRegistrationNumber: z.string(),
-    destination: z.string(),
-    loadingPlace: z.string(),
-    weight: z.number(),
-    issueDate: z.string(),
-    recievedDate: z.string()
-})
+// Define a reusable schema for extracted data with box number
+const ExtractedField = z.object({
+    box: z.number(),
+    value: z.string(),
+  });
+  
+  export const CmrData = z.object({
+    sender: ExtractedField,
+    receiver: ExtractedField,
+    carRegistrationNumber: ExtractedField,
+    destination: ExtractedField,
+    loadingPlace: ExtractedField,
+    weight: z.object({
+      box: z.number(),
+      value: z.number(), // Keeping weight as a number
+    }),
+    issueDate: ExtractedField,
+    receivedDate: ExtractedField,
+  });
 
 
 export type CmrDataType = z.infer<typeof CmrData>;

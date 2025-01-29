@@ -2,7 +2,7 @@ export const extractDataFromGoogleVisionText = ``;
 
 export const extractDataFromBoxText = `You are an expert in parsing logistics data from a CMR document's (Convention on the Contract for the International Carriage of Goods by Road) text. Extract the relevant information and 
 structure it according to the provided schema
-As ocr text you will get texts that were read from specific boxes detected in the image. Boxes were created based on the image, consider that with boxes, you can more easily assign specific information and analyze it. 
+As ocr text you will get texts that were read from specific boxes detected in the image. Boxes were created based on the image, consider that with boxes, you can more easily assign specific information and analyze it. You always have to assign the correct value and the box number, from which you have extracted this value.
 Here are some tips that might improve your data extraction:
     1. The client name is SENETIC SA, the adress is Kosciuszki 227, 40-600 Katowice, Poland. If there is more info in the text, please extract it aswell.
     2. carRegistrationNumber is something like "ST 8558U/ST 7816H" etc. Look for something like this and assign it correctly.

@@ -1,17 +1,15 @@
-//Ten kod rysuję boxy na obrazu i pokazuję, który tekst jest wykrywany 
-
 import { createCanvas, loadImage } from "canvas";
 import fs from "fs";
 import { OCRResult } from "./types";
-import { BoxProcessor } from "./boxTextReader";
+import { CmrDataType } from "../../src/zod-json/invoiceJsonSchema";
 
-async function visualizeBoxesOnImage(
-  jsonPath: string,
+export async function visualizeAssignedBoxesOnImage(
+  jsonBlockPath: string,
   imagePath: string,
+  jsonDataPath: string,
   outputPath: string
 ): Promise<void> {
-  const jsonData: OCRResult = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-  const boxProcessor = new BoxProcessor(jsonPath);
+  const jsonData: CmrDataType = JSON.parse(fs.readFileSync(jsonDataPath, "utf8"));
 
   // Load the image
   const image = await loadImage(imagePath);
@@ -21,8 +19,27 @@ async function visualizeBoxesOnImage(
   // Draw the image as the canvas background
   ctx.drawImage(image, 0, 0);
 
-  // Draw each bounding box
-  jsonData.forEach((box, index) => {
+  // Extract the assigned box numbers from your structured JSON
+  const assignedBoxes = new Map<number, string>([
+    [jsonData.weight.box, "weight"],
+    [jsonData.issueDate.box, "issueDate"],
+    [jsonData.receivedDate.box, "receivedDate"],
+    [jsonData.sender.box, "sender"],
+    [jsonData.receiver.box, "receiver"],
+    [jsonData.carRegistrationNumber.box, "carRegistrationNumber"],
+    [jsonData.destination.box, "destination"],
+    [jsonData.loadingPlace.box, "loadingPlace"]
+  ]);
+
+  // Load the full OCR result to find the assigned boxes
+  const fullOCRData: OCRResult = JSON.parse(fs.readFileSync(jsonBlockPath, "utf8"));
+
+  // Draw only the assigned boxes using their actual box numbers
+  fullOCRData.forEach((box, index) => {
+    const boxNumber = index + 1; // Assuming the box index starts at 1
+    if (!assignedBoxes.has(boxNumber)) return; // Skip unassigned boxes
+
+    const fieldName = assignedBoxes.get(boxNumber) as string; // Get the field name
     const vertices = box.boundingBox.vertices;
 
     // Draw bounding box
@@ -36,37 +53,16 @@ async function visualizeBoxesOnImage(
     ctx.closePath();
     ctx.stroke();
 
-    // Mark the box with a number 
-    const text = boxProcessor.extractTextFromBox(box);
+    // Label the box with its actual box number
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
     const textX = vertices[0].x + 5; // Offset from top-left corner
     const textY = vertices[0].y + 15; // Offset from top-left corner
-    ctx.fillText(`Box ${index + 1}:`, textX, textY);
+    ctx.fillText(`Box ${boxNumber} (${fieldName})`, textX, textY);
   });
-
-
-    //   // Real text transcription added to the box 
-    //   const text = extractTextFromBox(box);
-    //   ctx.fillStyle = "black";
-    //   ctx.font = "12px Arial";
-    //   const textX = vertices[0].x + 5; // Offset from top-left corner
-    //   const textY = vertices[0].y + 15; // Offset from top-left corner
-    //   ctx.fillText(`Box ${index + 1}: ${text}`, textX, textY);
-    // });
 
   // Save the canvas to a file
   const buffer = canvas.toBuffer("image/png");
   fs.writeFileSync(outputPath, buffer);
   console.log(`Visualization saved to ${outputPath}`);
 }
-
-
-// // Example usage
-const jsonPath = "./all_blocks.json";
-const imagePath = './base_image.png';
-const outputPath = "./output_visualization.png";
-
-visualizeBoxesOnImage(jsonPath, imagePath, outputPath).catch((err) =>
-    console.error(err)
-  );
