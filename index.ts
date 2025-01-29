@@ -4,9 +4,15 @@ import { pdfOCR } from "./services/ocr/ocr.js";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
 import { OpenAIProcessor } from "./src/zod-json/invoiceJsonProcessor.ts";
+import { CmrData } from "./src/zod-json/invoiceJsonSchema.ts";
 import path from "path";
 import fs from "fs-extra";
-import { extractDataFromBoxText, compareDataPromptForGoogleVision } from "./src/zod-json/prompts.ts";
+import {
+  extractDataFromBoxText,
+  compareDataPromptForGoogleVision,
+  compareDataPromptForGptVision,
+  finalComparisonPrompt,
+} from "./src/zod-json/prompts.ts";
 
 export const DATA_FOLDER = "./data";
 const FOLDER_ID = process.env.FOLDER_ID as string;
@@ -26,30 +32,53 @@ async function processFile(file: drive_v3.Schema$File) {
     const { text: ocrDataText, imagePaths } = await pdfOCR(pdfFilePath);
     // logger.info(`📄 OCR Data Text: ${ocrDataText}`);
 
-    const parsedData = await openAIProcessor.parseOcrText(ocrDataText as string, extractDataFromBoxText);
+    const parsedData = await openAIProcessor.parseOcrText(
+      ocrDataText as string,
+      extractDataFromBoxText,
+      CmrData
+    );
     logger.info("JSON Schema: ", parsedData);
 
-    const comparedDataUsingGptVision = await openAIProcessor.uploadPhotoAndAsk(imagePaths[0], parsedData);
-    const comparedDataUsingGoogleVision = await openAIProcessor.parseOcrText(ocrDataText as string, compareDataPromptForGoogleVision ,parsedData);
+    const comparedDataUsingGptVision = await openAIProcessor.compareDataUsingGptVision(
+      imagePaths[0],
+      CmrData,
+      compareDataPromptForGptVision,
+      parsedData
+    );
+
+
+    const comparedDataUsingGoogleVision = await openAIProcessor.compareDataUsingGoogleVision(
+      ocrDataText as string,
+      CmrData,
+      compareDataPromptForGoogleVision,
+      parsedData
+    );
 
     logger.info(`📄 Compared Data: ${file.name} `, comparedDataUsingGptVision);
 
-    const outputDir = path.join(DATA_FOLDER, "json-data");
-    const comparedGptVisionOutputDir = path.join(DATA_FOLDER, "compared-gpt-vision-json-data");
-    const comparedGoogleVisionOutputDir = path.join(DATA_FOLDER, "compared-google-vision-data");
+    const finalComparison = await openAIProcessor.compareJsonData(
+      comparedDataUsingGptVision,
+      comparedDataUsingGoogleVision,
+      finalComparisonPrompt,
+      ocrDataText,
+      CmrData
+    );
 
-      await Promise.all(
-        [outputDir, comparedGptVisionOutputDir, comparedGoogleVisionOutputDir].map(fs.ensureDir)
-      );
-      
-    const rawOutputFilePath = path.join(outputDir, `${file.name}.json`);
-    const comparedGptVisionOutputFilePath = path.join(comparedGptVisionOutputDir, `compared-gpt-vision-${file.name}.json`);
-    const comparedGooleVisionOutputFilePath = path.join(comparedGoogleVisionOutputDir, `compared-google-vision-${file.name}.json`);
+    const outputDirs = [
+      "json-data",
+      "compared-gpt-vision-json-data",
+      "compared-google-vision-data",
+      "final-comparison-json-data",
+    ].map((dir) => path.join(DATA_FOLDER, dir));
 
-    
-    await fs.writeJSON(rawOutputFilePath, parsedData, { spaces: 2 });
-    await fs.writeJSON(comparedGptVisionOutputFilePath, comparedDataUsingGptVision, { spaces: 2 });
-    await fs.writeJSON(comparedGooleVisionOutputFilePath, comparedDataUsingGoogleVision, { spaces: 2 });
+    await Promise.all(outputDirs.map(fs.ensureDir));
+
+    // Write JSON outputs
+    // await fs.writeJSON(path.join(outputDirs[0], `${file.name}.json`), parsedData, { spaces: 2 });
+    // await fs.writeJSON(path.join(outputDirs[1], `compared-gpt-vision-${file.name}.json`), comparedDataUsingGptVision, { spaces: 2 });
+    // await fs.writeJSON(path.join(outputDirs[2], `compared-google-vision-${file.name}.json`), comparedDataUsingGoogleVision, { spaces: 2 });
+    // await fs.writeJSON(path.join(outputDirs[3], `final-comparison-${file.name}.json`), finalComparison, { spaces: 2 });
+
   } catch (err) {
     logger.error(`Error processing file ${file.name}: ${err.message}`);
   }

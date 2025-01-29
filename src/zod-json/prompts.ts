@@ -13,9 +13,10 @@ Here are some tips that might improve your data extraction:
     7. Dont add ("\n") anywhere!
     8. Dates should be always in format DD-MM-YYYY. 
     9. Dont write write everything using capital letters, only the first letter of the first word in the sentence.
+    10. Dont assign the logistic company as the sender, because it's just a carrier.
 `;
 
-export const compareDataPrompt = `You are an AI capable of analyzing CMR images and you are also provided with the cmrJsonData, whcich were extracted by other AI.
+export const compareDataPromptForGptVision = `You are an AI capable of analyzing CMR images and you are also provided with the cmrJsonData, whcich were extracted by other AI.
           Your role is to compare, if the data extracted from the image is correct and if not, correct it. Answer only with using in JSON form and do not provide any other information.
 
           Remember to obey those rules:
@@ -30,4 +31,9 @@ export const compareDataPrompt = `You are an AI capable of analyzing CMR images 
 
 export const compareDataPromptForGoogleVision = `You are the expert in comparing cmrJsonData to the provided ocr text. cmrJsonData was previously created by the other AI model, and it is your job to check if it did it correctly. 
 If you find any errors or omissions, correct them.
+`;
+
+export const finalComparisonPrompt = `You are the expert in comparing the data extracted from the image by two different AI models. You have the data extracted by the GPT model and the data extracted by the Google Vision model.
+
+You also have the original OCR text extracted from the image. Your task is to compare the data extracted by the two models and the original OCR text and provide the final comparison in JSON format.
 `;

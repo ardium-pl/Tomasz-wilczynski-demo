@@ -63,10 +63,10 @@ async function visualizeBoxesOnImage(
 
 
 // // Example usage
-// const jsonPath = "./all_blocks.json";
-// const imagePath = './base_image.png';
-// const outputPath = "./output_visualization.png";
+const jsonPath = "./all_blocks.json";
+const imagePath = './base_image.png';
+const outputPath = "./output_visualization.png";
 
-// visualizeBoxesOnImage(jsonPath, imagePath, outputPath).catch((err) =>
-//     console.error(err)
-//   );
+visualizeBoxesOnImage(jsonPath, imagePath, outputPath).catch((err) =>
+    console.error(err)
+  );

@@ -50,10 +50,8 @@ export class BoxProcessor {
   }
 
   public assignTextFromBoxes(): string[] {
-    const allBoxTexts = this.jsonData.map((box) => {
-      return this.extractTextFromBox(box);
+    return this.jsonData.map((box, index) => {
+      return `Box ${index + 1}\n${this.extractTextFromBox(box)}`;
     });
-
-    return allBoxTexts;
   }
 }
