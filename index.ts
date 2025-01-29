@@ -3,13 +3,14 @@ import { listAllFiles } from "./drive/google-api.ts";
 import { pdfOCR } from "./services/ocr/ocr.js";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
-import { parseOcrText } from "./src/zod-json/invoiceJsonProcessor.ts";
+import { OpenAIProcessor } from "./src/zod-json/invoiceJsonProcessor.ts";
 import path from "path";
 import fs from "fs-extra";
-import { extractDataFromBoxText } from "./src/zod-json/prompts.ts";
+import { extractDataFromBoxText, compareDataPromptForGoogleVision } from "./src/zod-json/prompts.ts";
 
 export const DATA_FOLDER = "./data";
 const FOLDER_ID = process.env.FOLDER_ID as string;
+const openAIProcessor = new OpenAIProcessor();
 
 async function processFile(file: drive_v3.Schema$File) {
   const inputPdfFolder = path.join(DATA_FOLDER, "./input-pdf");
@@ -22,16 +23,33 @@ async function processFile(file: drive_v3.Schema$File) {
     );
     logger.info(`🧾 PDF downloaded to: ${pdfFilePath}`);
 
-    const ocrDataText = await pdfOCR(pdfFilePath);
-    logger.info(`📄 OCR Data Text: ${ocrDataText}`);
+    const { text: ocrDataText, imagePaths } = await pdfOCR(pdfFilePath);
+    // logger.info(`📄 OCR Data Text: ${ocrDataText}`);
 
-    const parsedData = await parseOcrText(ocrDataText as string, extractDataFromBoxText);
+    const parsedData = await openAIProcessor.parseOcrText(ocrDataText as string, extractDataFromBoxText);
     logger.info("JSON Schema: ", parsedData);
 
+    const comparedDataUsingGptVision = await openAIProcessor.uploadPhotoAndAsk(imagePaths[0], parsedData);
+    const comparedDataUsingGoogleVision = await openAIProcessor.parseOcrText(ocrDataText as string, compareDataPromptForGoogleVision ,parsedData);
+
+    logger.info(`📄 Compared Data: ${file.name} `, comparedDataUsingGptVision);
+
     const outputDir = path.join(DATA_FOLDER, "json-data");
-    fs.ensureDirSync(outputDir);
-    const outputFilePath = path.join(outputDir, `${file.name}.json`);
-    await fs.writeJSON(outputFilePath, parsedData, { spaces: 2 });
+    const comparedGptVisionOutputDir = path.join(DATA_FOLDER, "compared-gpt-vision-json-data");
+    const comparedGoogleVisionOutputDir = path.join(DATA_FOLDER, "compared-google-vision-data");
+
+      await Promise.all(
+        [outputDir, comparedGptVisionOutputDir, comparedGoogleVisionOutputDir].map(fs.ensureDir)
+      );
+      
+    const rawOutputFilePath = path.join(outputDir, `${file.name}.json`);
+    const comparedGptVisionOutputFilePath = path.join(comparedGptVisionOutputDir, `compared-gpt-vision-${file.name}.json`);
+    const comparedGooleVisionOutputFilePath = path.join(comparedGoogleVisionOutputDir, `compared-google-vision-${file.name}.json`);
+
+    
+    await fs.writeJSON(rawOutputFilePath, parsedData, { spaces: 2 });
+    await fs.writeJSON(comparedGptVisionOutputFilePath, comparedDataUsingGptVision, { spaces: 2 });
+    await fs.writeJSON(comparedGooleVisionOutputFilePath, comparedDataUsingGoogleVision, { spaces: 2 });
   } catch (err) {
     logger.error(`Error processing file ${file.name}: ${err.message}`);
   }

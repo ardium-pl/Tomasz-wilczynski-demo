@@ -27,7 +27,7 @@ const VISION_AUTH = {
   fallback: true, // Force use of REST API instead of gRPC
 };
 
-export async function pdfOCR(pdfFilePath: string): Promise<string> {
+export async function pdfOCR(pdfFilePath: string): Promise<{ text: string; imagePaths: string[] }> {
   const inputPdfFolder = path.join(DATA_FOLDER, "input-pdf");
   const imagesFolder = path.join(DATA_FOLDER, "images");
   const outputTextFolder = path.join(DATA_FOLDER, "output-text");
@@ -48,20 +48,14 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
 
     if (imageFilePaths.length === 0) {
       logger.error("No images were generated from the PDF");
-      return "";
+      return { text: "", imagePaths: [] };
     }
 
-    //The Google Vision API starts here
-
+    // Run OCR on each image
     const ocrResults = await Promise.all(
       imageFilePaths.map(async (imageFilePath): Promise<string> => {
         const ocrResult = await fileOcr(imageFilePath, fileNameWithoutExt);
-        if (ocrResult) {
-          return ocrResult.textFromBoxes.join("\n");
-        } else {
-          logger.warn(`No text found in image: ${imageFilePath}`);
-          return "";
-        }
+        return ocrResult ? ocrResult.textFromBoxes.join("\n") : "";
       })
     );
 
@@ -77,18 +71,13 @@ export async function pdfOCR(pdfFilePath: string): Promise<string> {
       ` 💚 Successfully processed and saved the OCR results for ${pdfFilePath}`
     );
 
-    // Delete the image files after processing
-    // for (const imageFilePath of imageFilePaths) {
-    //   logger.warn(`Deleting temporary image: ${imageFilePath}`);
-    //   deleteFile(imageFilePath);
-    // }
-
-    return concatenatedResults;
+    return { text: concatenatedResults, imagePaths: imageFilePaths };
   } catch (err: any) {
     logger.error(`Error processing ${pdfFilePath}:`, err);
-    return "";
+    return { text: "", imagePaths: [] };
   }
 }
+
 
 async function _saveDataToTxt(
   folder: string,
