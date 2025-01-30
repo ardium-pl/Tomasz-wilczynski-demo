@@ -1,10 +1,9 @@
 import dotenv from "dotenv";
-import OpenAI from "openai";
-import { z, ZodSchema } from "zod";
-import { zodResponseFormat } from "openai/helpers/zod";
 import * as fs from "fs";
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import { ChatCompletionMessageParam } from "openai/resources/index";
-import { CmrDataType } from "./invoiceJsonSchema";
+import { ZodSchema } from "zod";
 
 dotenv.config();
 

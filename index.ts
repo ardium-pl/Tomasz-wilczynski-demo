@@ -1,19 +1,18 @@
+import fs from "fs-extra";
 import { drive_v3 } from "googleapis";
+import path from "path";
 import { listAllFiles } from "./drive/google-api.ts";
+import { visualizeAssignedBoxesOnImage } from "./services/boxProcessor/boxDrawer.ts";
 import { pdfOCR } from "./services/ocr/ocr.js";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
 import { OpenAIProcessor } from "./src/zod-json/invoiceJsonProcessor.ts";
 import { CmrData } from "./src/zod-json/invoiceJsonSchema.ts";
-import path from "path";
-import fs from "fs-extra";
 import {
-  extractDataFromBoxText,
-  compareDataPromptForGoogleVision,
   compareDataPromptForGptVision,
-  finalComparisonPrompt,
+  extractDataFromBoxText,
+  finalComparisonPrompt
 } from "./src/zod-json/prompts.ts";
-import { visualizeAssignedBoxesOnImage } from "./services/boxProcessor/boxDrawer.ts";
 
 export const DATA_FOLDER = "./data";
 
@@ -23,7 +22,7 @@ const openAIProcessor = new OpenAIProcessor();
 async function processFile(file: drive_v3.Schema$File) {
   const inputPdfFolder = path.join(DATA_FOLDER, "./input-pdf");
   const blocksFolder = path.join(DATA_FOLDER, "./blocks-jsons");
-  const jsonDataFolder = path.join(DATA_FOLDER, "./json-data");
+  const jsonDataFolder = path.join(DATA_FOLDER, "./final-comparison-json-data");
   const drawedBoxesFolder = path.join(DATA_FOLDER, "./drawed-boxes");
   const fileNameWithoutExt = path.parse(file.name as string).name;
   try {
@@ -53,18 +52,11 @@ async function processFile(file: drive_v3.Schema$File) {
     );
 
 
-    const comparedDataUsingGoogleVision = await openAIProcessor.compareDataUsingGoogleVision(
-      ocrDataText as string,
-      CmrData,
-      compareDataPromptForGoogleVision,
-      parsedData
-    );
-
     logger.info(`📄 Compared Data: ${file.name} `, comparedDataUsingGptVision);
 
     const finalComparison = await openAIProcessor.compareJsonData(
       comparedDataUsingGptVision,
-      comparedDataUsingGoogleVision,
+      parsedData,
       finalComparisonPrompt,
       ocrDataText,
       CmrData
@@ -80,15 +72,14 @@ async function processFile(file: drive_v3.Schema$File) {
 
     await Promise.all(outputDirs.map(fs.ensureDir));
     
-    const jsonFilePath = path.join(jsonDataFolder, `${fileNameWithoutExt}.json`);
+    const jsonFilePath = path.join(jsonDataFolder, `final-comparison-${fileNameWithoutExt}.json`);
     const blocksJsonPath = path.join(blocksFolder, `${fileNameWithoutExt}.json`);
     const outputDrawedImagePath = path.join(drawedBoxesFolder, `${fileNameWithoutExt}.png`);
 
     // Write JSON outputs
     await fs.writeJSON(path.join(outputDirs[0], `${fileNameWithoutExt}.json`), parsedData, { spaces: 2 });
-    // await fs.writeJSON(path.join(outputDirs[1], `compared-gpt-vision-${file.name}.json`), comparedDataUsingGptVision, { spaces: 2 });
-    // await fs.writeJSON(path.join(outputDirs[2], `compared-google-vision-${file.name}.json`), comparedDataUsingGoogleVision, { spaces: 2 });
-    // await fs.writeJSON(path.join(outputDirs[3], `final-comparison-${file.name}.json`), finalComparison, { spaces: 2 });
+    await fs.writeJSON(path.join(outputDirs[1], `compared-gpt-vision-${fileNameWithoutExt}.json`), comparedDataUsingGptVision, { spaces: 2 });
+    await fs.writeJSON(path.join(outputDirs[3], `final-comparison-${fileNameWithoutExt}.json`), finalComparison, { spaces: 2 });
     await visualizeAssignedBoxesOnImage(blocksJsonPath, imagePaths[0], jsonFilePath, outputDrawedImagePath);
 
   } catch (err) {

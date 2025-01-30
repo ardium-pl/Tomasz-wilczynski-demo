@@ -4,6 +4,7 @@ import { z } from "zod";
 const ExtractedField = z.object({
     box: z.number(),
     value: z.string(),
+    confidence: z.number(), 
   });
   
   export const CmrData = z.object({
@@ -15,6 +16,7 @@ const ExtractedField = z.object({
     weight: z.object({
       box: z.number(),
       value: z.number(), // Keeping weight as a number
+      confidence: z.number(), 
     }),
     issueDate: ExtractedField,
     receivedDate: ExtractedField,
