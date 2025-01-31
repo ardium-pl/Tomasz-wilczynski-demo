@@ -35,3 +35,5 @@ export const inputPdfFolder = path.join(dataFolder, "input-pdf");
 export const imagesFolder = path.join(dataFolder,"images");
 export const outputTextFolder = path.join(dataFolder,"output-text");
 export const xmlFilesFolder = path.join(dataFolder, "xml-files");
+
+export const environment = process.env.NODE_ENV;

@@ -4,7 +4,6 @@ import { Builder } from "xml2js";
 import { xmlFilesFolder } from "../../utils/constants";
 import { InvoiceDataType } from "../openAi/invoiceJsonSchema";
 import { Dokument, Paczka } from "./types";
-import { getVatPercentage } from "../../utils/xmlProcessor";
 
 export class XmlService {
   public processDataToXml(data: InvoiceDataType[], isVatPayer: boolean): Paczka {
@@ -27,9 +26,8 @@ export class XmlService {
           ksieguj: {
             kwota: isVatPayer ? item.invoiceNettoValue.toFixed(2) : item.invoiceBruttoValue.toFixed(2),
           },
-          konto: item.bankAccount.replace(/\s+/g, ""),
           $: {
-            dekret: item.decret,
+            dekret: "wydatek",
           },
         };
   

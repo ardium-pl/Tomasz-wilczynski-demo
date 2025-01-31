@@ -21,7 +21,6 @@ invoiceProcessorRouter.post('/api/invoice-processor', async (req: Request, res: 
   try {
     logger.info(`Received request with clientName: ${clientName}, isVatPayer: ${isVatPayer}`);
 
-    // Pass the body to the main function (modify main to accept these parameters if needed)
     const xmlString = await main(clientName, isVatPayer);
 
     if (!xmlString) {

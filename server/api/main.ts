@@ -1,18 +1,19 @@
 import 'dotenv/config';
 import { drive_v3 } from 'googleapis';
 import { GoogleDriveService } from '../src/services/drive/google-api';
-import { pdfOCR, fileOcr, _saveDataToTxt } from '../src/services/ocr/ocr';
+import { OcrProcessor } from '../src/services/ocr/ocr';
 import { parseOcrText } from '../src/services/openAi/invoiceJsonProcessor';
 import { InvoiceDataType } from '../src/services/openAi/invoiceJsonSchema';
 import { XmlService } from '../src/services/xml/xmlProcessor';
-import { inputPdfFolder, outputTextFolder, PDF_FOLDER_ID } from '../src/utils/constants';
+import { environment, inputPdfFolder, outputTextFolder, PDF_FOLDER_ID } from '../src/utils/constants';
 import { downloadFile } from '../src/utils/downloadFile';
 import { logger } from '../src/utils/logger';
 import path from 'path';
 
 const googleDrive = new GoogleDriveService();
+const ocrProcessor = new OcrProcessor();
 
-async function processSingleFile(
+export async function processSingleFile(
   file: drive_v3.Schema$File,
   allInvoiceData: InvoiceDataType[],
   clientName: string,
@@ -27,15 +28,14 @@ async function processSingleFile(
     const filePath = await downloadFile(file.id, inputPdfFolder, file.name);
 
     const ocrFunctionMap: Record<string, (filePath: string) => Promise<string>> = {
-      pdf: pdfOCR,
-      jpg: fileOcr,
-      jpeg: fileOcr,
-      png: fileOcr,
+      pdf: ocrProcessor.processPdf,
+      jpg: ocrProcessor.processImage,
+      jpeg: ocrProcessor.processImage,
+      png: ocrProcessor.processImage,
     };
 
-    // Detect file extension
     const fileExtension = path.extname(file.name).toLowerCase().slice(1);
-    const fileNameWithoutExt = path.basename(file.name, path.extname(file.name));
+    const fileNameWithoutExtension = path.basename(file.name, path.extname(file.name));
 
     if (!ocrFunctionMap[fileExtension]) {
       logger.warn(`Skipping unsupported file type: ${file.name}`);
@@ -44,7 +44,11 @@ async function processSingleFile(
 
     logger.info(`🔍 Performing OCR on file: ${file.name}`);
     const ocrDataText = await ocrFunctionMap[fileExtension](filePath);
-    await _saveDataToTxt(outputTextFolder, fileNameWithoutExt, ocrDataText);
+
+    if (environment !== 'production') {
+      await ocrProcessor.saveDataToTxt(outputTextFolder, fileNameWithoutExtension, ocrDataText);
+      logger.info(`📄 OCR data saved for file: ${file.name}`);
+    }
 
     if(!ocrDataText) {
       logger.warn(`No text detected in file: ${file.name}`);
