@@ -18,8 +18,8 @@ COPY . .
 # Install poppler-utils for PDF processing
 RUN apt-get update && apt-get install -y poppler-utils
 RUN pnpm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx 
-RUN pnpm install @angular-devkit/build-angular
-RUN pnpm install @angular/cli
+RUN pnpm install @angular-devkit/build-angular 18.2.8
+RUN pnpm install @angular/cli 18.2.8
 # Build the application
 
 # Use Railway-provided NODE_ENV or default to production
