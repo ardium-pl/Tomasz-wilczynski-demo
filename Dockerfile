@@ -8,7 +8,8 @@ FROM node:18.19.0
 COPY package.json ./
 
 # Install root dependencies
-RUN npm install -g pnpm && pnpm install
+RUN npm install -g pnpm
+RUN pnpm run install-all
 
 # Copy the entire project directory
 COPY . .
@@ -24,7 +25,6 @@ ENV NODE_ENV=${NODE_ENV}
 
 # Conditionally run the build command based on the NODE_ENV
 RUN if [ "$NODE_ENV" = "production" ]; then pnpm run build; else pnpm run build:dev; fi
-
 
 # Expose the necessary ports
 EXPOSE 8080 
