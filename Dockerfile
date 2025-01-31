@@ -17,6 +17,7 @@ COPY . .
 RUN apt-get update && apt-get install -y poppler-utils
 RUN pnpm install @grpc/grpc-js@latest @google-cloud/vision@latest tsx 
 RUN pnpm install --no-frozen-lockfile 
+RUN pnpm install @angular/cli
 # Build the application
 
 # Use Railway-provided NODE_ENV or default to production
