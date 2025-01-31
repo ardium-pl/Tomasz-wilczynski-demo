@@ -23,7 +23,7 @@ ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 # Conditionally run the build command based on the NODE_ENV
-RUN if [ "$NODE_ENV" = "production" ]; then pnpm run build; else pnpm run build:dev;
+RUN if [ "$NODE_ENV" = "production" ]; then pnpm run build; else pnpm run build:dev; fi
 
 
 # Expose the necessary ports
