@@ -55,7 +55,7 @@ export class OcrProcessor {
     logger.info(` 🕶️ Processing image with Google Vision: ${imageFilePath}`);
 
     try {
-      const googleVisionText = this.fileOcr(imageFilePath);
+      const googleVisionText = await this.fileOcr(imageFilePath);
       deleteFile(imageFilePath);
 
       if (!googleVisionText) {
