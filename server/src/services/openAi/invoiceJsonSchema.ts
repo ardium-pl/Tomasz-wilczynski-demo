@@ -28,11 +28,26 @@ const Stawka = z.enum([
 ]);
 
 
-export const InvoiceData = z.object({
+export const DrawingData = z.object({
   drawingName: z.string(),
+  partName: z.string(),
+  version: z.string(),
+  dateCreated: z.string(),
+  lastModified: z.string(),
+  author: z.string(),
+  scale: z.string(),
+  sheets: z.string(),
+  weightKg: z.string(),
+  similarParts: z.array(z.string()),
+  materialClass: z.string(),
+  surfaceTreatment: z.string(),
+  standards: z.array(z.string()),
+  catalogNumber: z.string(),
+  serialNumber: z.string(),
+  manufacturerReference: z.string(),
 });
 
 // Infer the types
-export type InvoiceDataType = z.infer<typeof InvoiceData>;
+export type InvoiceDataType = z.infer<typeof DrawingData>;
 export type DekretType = z.infer<typeof Dekret>;
 export type StawkaType = z.infer<typeof Stawka>;

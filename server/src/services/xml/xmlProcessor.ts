@@ -18,7 +18,22 @@ export class XmlService {
       },
       dokument: data.map((item) => {
         const documentObject: Dokument = {
-          data: item.drawingName,
+          drawingNumber: item.drawingName,
+          partName: item.partName,
+          version: item.version,
+          dateCreated: item.dateCreated,
+          lastModified: item.lastModified,
+          author: item.author,
+          scale: item.scale,
+          sheets: item.sheets,
+          weightKg: item.weightKg,
+          similarParts: item.similarParts,
+          materialClass: item.materialClass,
+          surfaceTreatment: item.surfaceTreatment,
+          standards: item.standards,
+          catalogNumber: item.catalogNumber,
+          serialNumber: item.serialNumber,
+          manufacturerReference: item.manufacturerReference,
         };
   
         // if (isVatPayer) {

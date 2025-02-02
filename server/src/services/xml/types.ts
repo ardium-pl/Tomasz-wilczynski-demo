@@ -95,26 +95,22 @@ interface Kontrahent {
 }
 
 export interface Dokument {
-  data: string;           // xs:date (required)
-  data_walut?: string;    // xs:date
-  waluta?: {
-    waluta: Waluta;       // required if this block appears
-    kurs: Kurs;           // exchange rate
-  };
-  data_wystawienia?: string; // xs:date
-  termin?: string;           // xs:date
-  numer?: string;
-  KSeF?: string;            // matches the given pattern
-  kontrahent?: Kontrahent;
-  konto?: string;           // account number
-  opis?: string;
-  uwagi?: string;
-  ksieguj?: Ksieguj;
-  rejVAT?: RejVAT;
-  zaplata?: Zaplata[];
-  $?: {
-    dekret?: DekretType;       // default="sprz"
-  };
+  drawingNumber: string;
+  partName: string;
+  version: string;
+  dateCreated: string;
+  lastModified: string;
+  author: string;
+  scale: string;
+  sheets: string;
+  weightKg: string;
+  similarParts: string[];
+  materialClass: string;
+  surfaceTreatment: string;
+  standards: string[];
+  catalogNumber: string;
+  serialNumber: string;
+  manufacturerReference: string;
 }
 
 export interface Paczka {
