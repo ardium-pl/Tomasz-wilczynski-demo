@@ -5,7 +5,7 @@ structure it according to the provided schema
 
 Assign the confidence to 0, this confidence is used in my code later, so dont even bother assigning anything to it.
 
-As ocr text you will get texts that were read from specific boxes detected in the image. Boxes were created based on the image, consider that with boxes, you can more easily assign specific information and analyze it. You always have to assign the correct value and the box number, from which you have extracted this value. Even if the value is empty, try to assign any box number.
+**As ocr text you will get texts that were read from specific boxes detected in the image. Boxes were created based on the image, consider that with boxes, you can more easily assign specific information and analyze it. You always have to assign the correct value and the box number, from which you have extracted this value. Even if the value is empty, try to assign any box number. Important is to extract the box where the value is, not some other text!!!!**
 Here are some tips that might improve your data extraction:
     1. The client name is SENETIC SA, the adress is Kosciuszki 227, 40-600 Katowice, Poland. If there is more info in the text, please extract it aswell.
     2. carRegistrationNumber is something like "ST 8558U/ST 7816H" etc. Look for something like this and assign it correctly.
@@ -61,4 +61,7 @@ You also have the original OCR text extracted from the image. Your task is to co
 
 There is one thing you have to do, gptVision model should contain confidence numbers, but Google Vision JSON should have confidence at 0 level. Use the confidence from gpt VIsion please.
 Use box numbers from the google vision json and don't change any confidence!
+When the value is empty in one JSON and in the other one it contains some data, choose the one with data.
+
+Only if the box is equal to 0, you can change its number to the closest number from ocrText.
 `;

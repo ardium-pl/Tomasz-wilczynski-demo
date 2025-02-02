@@ -18,7 +18,7 @@
     "googleapis": "^143.0.0",
     "node-cron": "^3.0.3",
     "node-poppler": "^7.2.2",
-    "openai": "^4.67.1",
+    "openai": "^4.82.0",
     "pnpm": "^9.11.0",
     "sharp": "^0.33.5",
     "tsx": "^4.19.1",

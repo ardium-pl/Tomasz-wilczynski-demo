@@ -22,7 +22,7 @@ export class BoxProcessor {
       paragraph.words.forEach((word) => {
         word.symbols.forEach((symbol) => {
           // Check confidence and extract only if confidence >= 0.4
-          if (symbol.confidence === undefined || symbol.confidence >= 0.4) {
+          // if (symbol.confidence === undefined || symbol.confidence >= 0.4) {
             text += symbol.text;
 
             // Add spaces or line breaks based on detected breaks
@@ -31,7 +31,7 @@ export class BoxProcessor {
             } else if (symbol.property?.detectedBreak?.type === "LINE_BREAK") {
               text += "\n";
             }
-          }
+          // }
         });
       });
       // Add a line break between paragraphs

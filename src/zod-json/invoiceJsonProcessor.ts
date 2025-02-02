@@ -4,6 +4,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { ChatCompletionMessageParam } from "openai/resources/index";
 import { ZodSchema } from "zod";
+import { gpt4oModel, gpto3MiniModel, gptExpertimentalModel } from "./invoiceJsonSchema";
 
 dotenv.config();
 
@@ -18,10 +19,11 @@ export class OpenAIProcessor {
 
   private async _processChat<T>(
     messages: ChatCompletionMessageParam[],
+    model: string,
     schema: ZodSchema<T>
   ): Promise<T> {
     const completion = await this.client.beta.chat.completions.parse({
-      model: "gpt-4o-2024-08-06",
+      model: model,
       messages,
       response_format: zodResponseFormat(schema, "CmrData"),
     });
@@ -46,7 +48,7 @@ export class OpenAIProcessor {
       { role: "user" as const, content: ocrText },
     ];
 
-    return this._processChat(messages, schema);
+    return this._processChat(messages, gpto3MiniModel,schema);
   }
 
   public async compareDataUsingGptVision<T>(
@@ -83,7 +85,7 @@ export class OpenAIProcessor {
       },
     ];
 
-    return this._processChat(messages, schema);
+    return this._processChat(messages, gpt4oModel,schema);
   }
 
   public async compareDataUsingGoogleVision<T>(
@@ -100,7 +102,7 @@ export class OpenAIProcessor {
       { role: "user", content: ocrText },
     ];
 
-    return this._processChat(messages, schema);
+    return this._processChat(messages, gpto3MiniModel,schema);
   }
 
   public async compareJsonData<T>(
@@ -123,6 +125,6 @@ export class OpenAIProcessor {
       },
     ];
 
-    return this._processChat(messages, schema);
+    return this._processChat(messages, gpto3MiniModel,schema);
   }
 }

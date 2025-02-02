@@ -24,3 +24,8 @@ const ExtractedField = z.object({
 
 
 export type CmrDataType = z.infer<typeof CmrData>;
+
+export const gpt4oModel = "gpt-4o-2024-08-06";
+// export const gpto3MiniModel = "o1-2024-12-17";
+export const gpto3MiniModel = "o3-mini-2025-01-31";
+export const gptExpertimentalModel = "gpt-4o-2024-11-20"; 
