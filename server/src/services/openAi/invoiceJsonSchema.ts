@@ -29,21 +29,14 @@ const Stawka = z.enum([
 
 
 export const DrawingData = z.object({
-  drawingName: z.string(),
-  partName: z.string(),
-  version: z.string(),
+  name: z.string(),
   dateCreated: z.string(),
   lastModified: z.string(),
-  author: z.string(),
   scale: z.string(),
   sheets: z.string(),
-  weightKg: z.string(),
-  similarParts: z.array(z.string()),
-  materialClass: z.string(),
+  weight: z.string(),
+  material: z.string(),
   surfaceTreatment: z.string(),
-  standards: z.array(z.string()),
-  catalogNumber: z.string(),
-  serialNumber: z.string(),
   manufacturerReference: z.string(),
 });
 

@@ -18,21 +18,14 @@ export class XmlService {
       },
       dokument: data.map((item) => {
         const documentObject: Dokument = {
-          drawingNumber: item.drawingName,
-          partName: item.partName,
-          version: item.version,
+          name: item.name,
           dateCreated: item.dateCreated,
           lastModified: item.lastModified,
-          author: item.author,
           scale: item.scale,
           sheets: item.sheets,
-          weightKg: item.weightKg,
-          similarParts: item.similarParts,
-          materialClass: item.materialClass,
+          weight: item.weight,
+          material: item.material,
           surfaceTreatment: item.surfaceTreatment,
-          standards: item.standards,
-          catalogNumber: item.catalogNumber,
-          serialNumber: item.serialNumber,
           manufacturerReference: item.manufacturerReference,
         };
   

@@ -4,22 +4,23 @@ import { DrawingData, InvoiceDataType } from "./invoiceJsonSchema";
 
 export async function parseOcrText(ocrText: string, clientName: string): Promise<InvoiceDataType> { // TODO: CHANGE THE PROMPT TO ENSURE THAT CLIENTNAME AND ISVATPAYER ARE USED IN THE PROMPT
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-4o-2024-08-06",
+    model: "o3-mini-2025-01-31",
     messages: [
       {
         role: "system",
-        content: `You are an expert in extracting structured data from technical drawings. Your task is to analyze a given technical drawing and extract relevant metadata in a structured format. The output should be formatted according to the following TypeScript interface:
-        **Instructions:**
-1. **Extract only metadata** – Ignore technical dimensions, tolerances, and geometric details.
-2. **Follow the interface strictly** – Ensure each extracted value matches the expected data type.
-3. **Standardize dates** – Convert dates to "YYYY-MM-DD" format.
-4. **Handle missing data** – If a field is missing, return an empty string ("") or an empty array ([]) where applicable.
-5. **Normalize units** – Convert weight to kilograms (kg).
-6. **Extract standards correctly** – Identify industry standards (e.g., ISO, DIN, ANSI) and list them in standards.
-7. **Keep text clean** – Remove unnecessary symbols, extra spaces, and non-relevant information.
-
-`
-
+        content: `
+        You are an expert in extracting structured data from technical drawings. 
+        Your task is to analyze a given text taken from a technical drawing and extract relevant metadata in a structured format:
+        You should follow these rules:
+        Extract only metadata – Ignore technical dimensions, tolerances, and geometric details.
+        Standardize dates – Convert dates to the "YYYY-MM-DD" format.
+        Handle missing data – If a field is missing, return an empty string ("") or an empty array ([]) where applicable.
+        Normalize units – Convert weight to kilograms (kg).
+        Extract the drawing name correctly – The "partName" field should contain the title or name of the drawing.
+        Extract the scale correctly – The "scale" field should contain the scale of the drawing, such as "1:1", "1:2", etc.
+        Extract sheet information correctly – The "sheets" field should contain the sheet number in the format "n/m", e.g., "1/2".
+        Extract the manufacturer reference correctly – The "manufacturerReference" field should contain the name of the company that owns the drawing.
+        `
       },
       { role: "user", content: ocrText },
     ],

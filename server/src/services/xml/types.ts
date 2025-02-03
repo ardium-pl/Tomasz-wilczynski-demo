@@ -95,21 +95,14 @@ interface Kontrahent {
 }
 
 export interface Dokument {
-  drawingNumber: string;
-  partName: string;
-  version: string;
+  name: string;
   dateCreated: string;
   lastModified: string;
-  author: string;
   scale: string;
   sheets: string;
-  weightKg: string;
-  similarParts: string[];
-  materialClass: string;
+  weight: string;
+  material: string;
   surfaceTreatment: string;
-  standards: string[];
-  catalogNumber: string;
-  serialNumber: string;
   manufacturerReference: string;
 }
 

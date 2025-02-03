@@ -10,11 +10,13 @@
     "front": "cd client && ng serve",
     "prettier": "prettier --write .",
     "install-all": "pnpm i && cd server && pnpm i && cd ../client && pnpm i && cd ../"
-    
   },
   "devDependencies": {
     "only-allow": "^1.2.1",
     "pnpm": "^9.12.1",
     "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "openai": "^4.82.0"
   }
 }
