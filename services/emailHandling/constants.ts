@@ -1,0 +1,1 @@
+export const EMAIL_ADDRESS = process.env.EMAIL_ADDRESS as string;

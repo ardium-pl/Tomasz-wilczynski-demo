@@ -6,13 +6,15 @@ import { visualizeAssignedBoxesOnImage } from "./services/boxProcessor/boxDrawer
 import { pdfOCR } from "./services/ocr/ocr.js";
 import { downloadFile } from "./src/utils/downloadFile.ts";
 import { logger } from "./src/utils/logger.ts";
-import { OpenAIProcessor } from "./src/zod-json/invoiceJsonProcessor.ts";
-import { CmrData } from "./src/zod-json/invoiceJsonSchema.ts";
+import { OpenAIProcessor } from "./services/zod-json/invoiceJsonProcessor.ts";
+import { CmrData } from "./services/zod-json/invoiceJsonSchema.ts";
 import {
   compareDataPromptForGptVision,
   extractDataFromBoxText,
   finalComparisonPrompt
-} from "./src/zod-json/prompts.ts";
+} from "./services/zod-json/prompts.ts";
+import { authorize } from "./services/emailHandling/auth.ts";
+import { startImapListener } from "./services/emailHandling/imapListener.ts";
 
 export const DATA_FOLDER = "./data";
 
@@ -103,4 +105,45 @@ async function main() {
   }
 }
 
-await main();
+
+async function startImap() {
+  try {
+      // Create necessary data directories
+      // await createDataDirectories();
+
+      // Set up OAuth2 credentials
+      const CREDENTIALS = {
+          client_id: process.env.CLIENT_ID as string,
+          client_secret: process.env.CLIENT_SECRET as string,
+          redirect_uris: process.env.REDIRECT_URIS as string,
+      };
+      
+      if (!CREDENTIALS.client_id || !CREDENTIALS.client_secret || !CREDENTIALS.redirect_uris) {
+        throw new Error(
+          "Missing required environment variables. " +
+          "Please set CLIENT_ID, CLIENT_SECRET, and REDIRECT_URIS."
+        );
+      }
+
+      const oAuth2Client = await authorize(CREDENTIALS);
+
+      // Check if the --reset argument is present
+      const shouldReset = process.argv.includes("--reset");
+
+      if (shouldReset) {
+          logger.info("Resetting emails and removing attachment folders...");
+          // await resetEmailsAndAttachments(oAuth2Client);
+          logger.info("Reset completed.");
+          process.exit(0); // Exit successfully after reset
+      } else {
+          // Normalny tryb pracy - nasłuchiwanie i przetwarzanie nowych e-maili
+          await startImapListener(oAuth2Client);
+      }
+  } catch (error) {
+      logger.error("An error occurred during execution:", error);
+      process.exit(1); // Exit with error code
+  }
+}
+
+// await main()
+await startImap();

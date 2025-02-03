@@ -1,7 +1,7 @@
 import { createCanvas, loadImage } from "canvas";
 import fs from "fs";
 import { OCRResult } from "./types";
-import { CmrDataType } from "../../src/zod-json/invoiceJsonSchema";
+import { CmrDataType } from "../zod-json/invoiceJsonSchema";
 
 export async function visualizeAssignedBoxesOnImage(
   jsonBlockPath: string,
@@ -31,37 +31,52 @@ export async function visualizeAssignedBoxesOnImage(
   const fullOCRData: OCRResult = JSON.parse(fs.readFileSync(jsonBlockPath, "utf8"));
 
   fullOCRData.forEach((box, index) => {
-    const boxNumber = index + 1; 
-    if (!assignedBoxes.has(boxNumber)) return; 
-
-    const { field, value, confidence } = assignedBoxes.get(boxNumber) as { field: string; value: string | number; confidence: number };
+    const boxNumber = index + 1;
+    if (!assignedBoxes.has(boxNumber)) return;
+  
+    const { field, value, confidence } = assignedBoxes.get(boxNumber)!;
     const vertices = box.boundingBox.vertices;
-
-
-    let boxColor = "red"; 
+  
+    let boxColor = "red";
     if (confidence >= 0.9) {
-      boxColor = "green"; 
+      boxColor = "green";
     } else if (confidence >= 0.75 && confidence < 0.9) {
-      boxColor = "orange"; 
+      boxColor = "orange";
     }
-
-    // Draw bounding box
+  
+    // Compute min/max x & y
+    const xValues = vertices.map(v => v.x);
+    const yValues = vertices.map(v => v.y);
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+  
+    // Decide how many pixels to expand (margin)
+    const margin = 7;
+  
+    // Calculate new width/height
+    const width = maxX - minX;
+    const height = maxY - minY;
+  
+    // Draw a thicker rectangle around the expanded area
     ctx.strokeStyle = boxColor;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(vertices[0].x, vertices[0].y);
-    vertices.forEach((vertex) => {
-      ctx.lineTo(vertex.x, vertex.y);
-    });
-    ctx.closePath();
-    ctx.stroke();
-
+    ctx.lineWidth = 10; // You can change this to whatever thickness you want
+    ctx.strokeRect(
+      minX - margin,
+      minY - margin,
+      width + margin * 2,
+      height + margin * 2
+    );
+  
     // Label the box with its actual box number, field name, and confidence level
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
-    const textX = vertices[0].x + 5; 
-    const textY = vertices[0].y + 15; 
-    ctx.fillText(`Box ${boxNumber} (${field}) - ${confidence.toFixed(2)}`, textX, textY);
+    ctx.fillText(
+      `Box ${boxNumber} (${field}) - ${confidence.toFixed(2)}`,
+      minX - margin, 
+      minY - margin - 5 // Just above the expanded box
+    );
   });
 
   const buffer = canvas.toBuffer("image/png");
